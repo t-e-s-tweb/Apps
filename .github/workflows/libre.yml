@@ -18,11 +18,7 @@ jobs:
         with:
           repository: libre-tube/LibreTube
           ref: master
-      - run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git add .
-     
+        
       - name: Revert Commit
         run: |
           git reset --hard HEAD
@@ -30,6 +26,12 @@ jobs:
           git checkout master
           git pull
           git revert -n -m 1 ce8ed66 --no-edit
+  
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .  
+      
       - name: Fetch Specific Commit
         run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
 
