@@ -27,7 +27,7 @@ jobs:
           git fetch origin
           git checkout master
           git pull
-          git revert -v -n ce8ed66 --no-edit
+          git revert -v -n -m 1 ce8ed66 --no-edit
           git push origin HEAD:refs/heads/revert-commit
 
   
