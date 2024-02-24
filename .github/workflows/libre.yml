@@ -25,7 +25,7 @@ jobs:
      
       - name: Revert Commit
         run: |
-          git fetch origin
+          git pull
           git revert -m 1 ce8ed66
       - name: Fetch Specific Commit
         run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
