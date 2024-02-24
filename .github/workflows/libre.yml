@@ -25,6 +25,7 @@ jobs:
      
       - name: Revert Commit
         run: |
+          git fetch origin
           git checkout master
           git pull
           git revert -m 1 ce8ed66
