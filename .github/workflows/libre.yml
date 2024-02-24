@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout Main Repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: libre-tube/LibreTube
           ref: master
