@@ -21,14 +21,7 @@ jobs:
           fetch-depth: 0
       - name: Revert Commit
         run: |
-          git config --global user.email "actions@github.com"
-          git config --global user.name "GitHub Actions"
-          git reset --hard HEAD
-          git fetch origin
-          git checkout master
-          git pull
           git revert -v -n -m 1 ce8ed66 --no-edit
-          git push origin HEAD:refs/heads/revert-commit
 
   
       - run: |
