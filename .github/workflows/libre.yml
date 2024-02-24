@@ -79,4 +79,4 @@ jobs:
         with:
           name: reports
           path: '*/build/reports'
-        if: ${{ failure() }
+        if: ${{ failure() }}
