@@ -25,6 +25,7 @@ jobs:
      
       - name: Revert Commit
         run: |
+          git reset --hard HEAD
           git fetch origin
           git checkout master
           git pull
