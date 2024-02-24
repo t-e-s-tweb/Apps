@@ -28,12 +28,12 @@ jobs:
       - name: Merge Specific Commit
         run: |
          git merge FETCH_HEAD
-      - name: Fetch Pull Request Branch
-        run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5607/merge
-      - name: Merge Commits
-        run: |
+    #  - name: Fetch Pull Request Branch
+    #    run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5607/merge
+   #   - name: Merge Commits
+   #     run: |
           # Merge specific commits from the pull request
-          git merge FETCH_HEAD
+    #      git merge FETCH_HEAD
       - name: Fetch Pull Request Branch
         run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5645/merge
       - name: Merge Commits
