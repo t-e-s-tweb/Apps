@@ -26,7 +26,7 @@ jobs:
       - name: Revert Commit
         run: |
           git checkout master
-          git revert -m 1 ce8ed66e927ab2232eb29f756692e80523b34ea3
+          git revert -m 1 ce8ed66
       - name: Fetch Specific Commit
         run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
 
