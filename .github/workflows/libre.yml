@@ -25,7 +25,7 @@ jobs:
           git fetch origin
           git checkout master
           git pull
-          git revert -n -m 1 ce8ed66 --no-edit
+          git revert -v -n -m 1 ce8ed66 --no-edit
   
       - run: |
           git config user.name github-actions
