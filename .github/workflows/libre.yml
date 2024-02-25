@@ -52,17 +52,17 @@ jobs:
     #      git merge FETCH_HEAD
      # - name: Revert Commit
    #     run: git revert 0b059ccc12ab5a6df89c3c61f34680ad18db5471 --no-edit
-  #    - name: Revert Commit
-  #      run: |
-   #       git revert -v -n -m 1 ce8ed66 --no-edit
+      - name: Revert Commit
+        run: |
+          git revert -v -n -m 1 ce8ed66 --no-edit
       - name: Set up JDK
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
           
       - name: Cache Gradle dependencies
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             ~/.gradle/caches
