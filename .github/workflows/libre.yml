@@ -25,7 +25,9 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .  
-      
+      - name: Revert Commit
+        run: |
+          git revert -v -n -m 1 ce8ed66 --no-edit 
       - name: Fetch Specific Commit
         run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
 
@@ -52,9 +54,7 @@ jobs:
     #      git merge FETCH_HEAD
      # - name: Revert Commit
    #     run: git revert 0b059ccc12ab5a6df89c3c61f34680ad18db5471 --no-edit
-      - name: Revert Commit
-        run: |
-          git revert -v -n -m 1 ce8ed66 --no-edit
+      
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
