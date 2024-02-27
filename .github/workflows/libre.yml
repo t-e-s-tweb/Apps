@@ -26,11 +26,11 @@ jobs:
           git config user.email github-actions@github.com
           git add .  
       
-      - name: Fetch Specific Commit
-        run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
+   #   - name: Fetch Specific Commit
+   #     run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
 
-      - name: Merge Specific Commit
-        run: |
+    #  - name: Merge Specific Commit
+    #    run: |
          git merge FETCH_HEAD
     #  - name: Fetch Pull Request Branch
      #   run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5607/merge
