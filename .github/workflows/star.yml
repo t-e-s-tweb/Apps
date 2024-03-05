@@ -27,7 +27,7 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
       - name: Filter
-        run: sed -i '/^ *signingConfigs {/,/^ *}/d' build.gradle
+        run: sed -i '/^ *signingConfigs {/,/^ *}/d' app/build.gradle
       - name: Build with Gradle
         run: ./gradlew assembleRelease --build-cache --parallel --warning-mode none
 
