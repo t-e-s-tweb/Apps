@@ -52,9 +52,9 @@ jobs:
     #      git merge FETCH_HEAD
      # - name: Revert Commit
    #     run: git revert 0b059ccc12ab5a6df89c3c61f34680ad18db5471 --no-edit
-      - name: Revert Commit
-        run: |
-          git revert -v -n -m 1 ce8ed66 --no-edit -X theirs
+    #  - name: Revert Commit
+    #    run: |
+    #      git revert -v -n -m 1 ce8ed66 --no-edit -X theirs
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
