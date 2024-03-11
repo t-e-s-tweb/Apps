@@ -8,9 +8,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
+        with:
+          repository: libre-tube/LibreTube
+          ref: master
+          fetch-depth: 0
       - name: Revert commit
         run: git revert 0b059ccc12ab5a6df89c3c61f34680ad18db5471
 
