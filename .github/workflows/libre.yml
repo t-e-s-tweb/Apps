@@ -55,6 +55,7 @@ jobs:
       - name: Revert Commit
         run: |
           git revert -v -n 0b059cc --no-edit -X theirs
+          sed -i 's/include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")/include("arm64-v8a")/g' app/build.gradle.kts
           sed -i '/import com\.github\.libretube\.ui\.extensions\.trySetTooltip/d' app/src/main/java/com/github/libretube/ui/views/CustomExoPlayerView.kt
       - name: Set up JDK
         uses: actions/setup-java@v4
