@@ -22,29 +22,29 @@ jobs:
           git config user.email github-actions@github.com
           git add .
        
-     # - name: Fetch Pull Request Branch
-    #    run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2251/merge
-  #    - name: Merge Commits
-    #    run: |
+      - name: Fetch Pull Request Branch
+        run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2236/merge
+      - name: Merge Commits
+        run: |
           # Merge specific commits from the pull request
-     #     git merge FETCH_HEAD
-   #   - name: Fetch Pull Request Branch
-     #   run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2252/merge
-    #  - name: Merge Commits
-     #   run: |
+          git merge FETCH_HEAD --allow-unrelated-histories
+      - name: Fetch Pull Request Branch
+        run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2251/merge
+      - name: Merge Commits
+        run: |
           # Merge specific commits from the pull request
-     #     git merge FETCH_HEAD
-    #  - name: Fetch Pull Request Branch
-     #   run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2264/merge
-      #- name: Merge Commits
-       # run: |
+          git merge FETCH_HEAD --allow-unrelated-histories
+      - name: Fetch Pull Request Branch
+        run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2252/merge
+      - name: Merge Commits
+        run: |
           # Merge specific commits from the pull request
-        #  git merge FETCH_HEAD
+          git merge FETCH_HEAD --allow-unrelated-histories
       
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '11'
           distribution: 'temurin'
           
       - name: Cache Gradle dependencies
