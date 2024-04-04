@@ -21,7 +21,8 @@ jobs:
           git config user.name github-actions
           git config user.email github-actions@github.com
           git add .
-       
+          sed -i 's/8\.0/7.5/g' gradle/wrapper/gradle-wrapper.properties
+          sed -i 's/8\.1\.4/7.4.2/g' build.gradle
       - name: Fetch Pull Request Branch
         run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2236/merge
       - name: Merge Commits
