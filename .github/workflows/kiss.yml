@@ -60,11 +60,10 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
-        run: |
-             chmod +x gradlew
-             ./gradlew clean build
+        run:  chmod +x gradlew
+      
       - name: Build with Gradle
-        run: ./gradlew assembleRelease --build-cache --parallel --stacktrace
+        run: ./gradlew clean assembleRelease --parallel --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
