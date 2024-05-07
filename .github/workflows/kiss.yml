@@ -63,13 +63,13 @@ jobs:
         run:  chmod +x gradlew
       
       - name: Build with Gradle
-        run: ./gradlew clean assembleRelease --stacktrace
+        run: ./gradlew clean assembleDebug --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
         with:
           name: KISS
-          path: app/build/outputs/apk/release/*.apk
+          path: app/build/outputs/apk/debug/*.apk
 
       - name: Archive reports for failed job
         uses: actions/upload-artifact@v3
