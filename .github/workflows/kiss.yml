@@ -10,7 +10,7 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v4
@@ -25,7 +25,7 @@ jobs:
          # sed -i 's/8\.0/7.5/g' gradle/wrapper/gradle-wrapper.properties
         #  sed -i 's/8\.1\.4/7.4.2/g' build.gradle
       - name: Fetch Pull Request Branch
-        run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2282/merge
+        run: git fetch https://github.com/marunjar/KISS.git fix_system_color
       - name: Merge Commits
         run: |
           # Merge specific commits from the pull request
@@ -63,7 +63,7 @@ jobs:
         run:  chmod +x gradlew
       
       - name: Build with Gradle
-        run: ./gradlew clean assembleRelease --parallel --stacktrace
+        run: ./gradlew clean assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
