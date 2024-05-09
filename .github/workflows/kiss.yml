@@ -63,7 +63,7 @@ jobs:
         run:  chmod +x gradlew
       
       - name: Build with Gradle
-        run: ./gradlew clean assembleDebug --stacktrace
+        run: ./gradlew clean assembleRelease --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v3
