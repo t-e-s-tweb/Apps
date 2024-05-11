@@ -24,12 +24,12 @@ jobs:
     
          # sed -i 's/8\.0/7.5/g' gradle/wrapper/gradle-wrapper.properties
         #  sed -i 's/8\.1\.4/7.4.2/g' build.gradle
-   #   - name: Fetch Pull Request Branch
-   #     run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2285/merge
-    #  - name: Merge Commits
-     #   run: |
+      - name: Fetch Pull Request Branch
+        run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2285/merge
+      - name: Merge Commits
+        run: |
           # Merge specific commits from the pull request
-     #     git merge FETCH_HEAD --allow-unrelated-histories
+          git merge FETCH_HEAD --allow-unrelated-histories
      # - name: Fetch Pull Request Branch
      #   run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2251/merge
     #  - name: Merge Commits
