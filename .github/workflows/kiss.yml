@@ -65,12 +65,19 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease --stacktrace
 
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+    #  - name: Upload APK
+    #    uses: actions/upload-artifact@v3
+    #    with:
+     #     name: KISS
+       #   path: app/build/outputs/apk/release/*.apk
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.7.0
         with:
-          name: KISS
-          path: app/build/outputs/apk/release/*.apk
-
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: app/build/outputs/apk/release/*.apk
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
       - name: Archive reports for failed job
         uses: actions/upload-artifact@v3
         with:
