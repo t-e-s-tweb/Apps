@@ -89,7 +89,7 @@ jobs:
         uses: svenstaro/upload-release-action@2.7.0
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ env.APK }}
+          file: app/build/outputs/apk/oss/release/*.apk
           tag: Neko
           overwrite: true
           file_glob: true
