@@ -55,7 +55,16 @@ jobs:
         go mod tidy -v
         gomobile bind -v -androidapi 19 -ldflags='-s -w' ./
         cp *.aar ${{ github.workspace }}/V2rayNG/app/libs/
-
+    - name: Cache Gradle dependencies
+      id: cache-gradle
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
