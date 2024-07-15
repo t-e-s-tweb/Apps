@@ -66,20 +66,21 @@ jobs:
           distribution: 'temurin'
           
       - name: Cache Gradle dependencies
+        id: cache-gradle
         uses: actions/cache@v4
         with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            gradle-${{ runner.os }}-
+         path: |
+           ~/.gradle/caches
+           ~/.gradle/wrapper
+         key: gradle-${{ runner.os }}-libre-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+         restore-keys: |
+           gradle-${{ runner.os }}-libre-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assembleRelease --build-cache --parallel
+        run: ./gradlew assembleRelease
 
     #  - name: Upload APK
    #     uses: actions/upload-artifact@v3
