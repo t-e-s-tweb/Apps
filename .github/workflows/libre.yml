@@ -16,7 +16,7 @@ jobs:
       - name: Checkout Main Repository
         uses: actions/checkout@v4
         with:
-          repository: Pittvandewitt/LibreTube
+          repository: libre-tube/LibreTube
           ref: master
           
 
