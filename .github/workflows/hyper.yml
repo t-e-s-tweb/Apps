@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: zt64/Hyperion
-          ref: master
+          ref: main
           
 
       - name: ADD
