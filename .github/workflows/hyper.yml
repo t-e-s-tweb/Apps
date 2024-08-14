@@ -1,0 +1,104 @@
+name: hyper
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ new ]
+  pull_request:
+    branches: [ new ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Main Repository
+        uses: actions/checkout@v4
+        with:
+          repository: zt64/Hyperion
+          ref: master
+          
+
+      - name: ADD
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .  
+      
+   #   - name: Fetch Specific Commit
+   #     run: git fetch https://github.com/akashs056/LibreTube.git 4003537f982d9531faa29107711ebdf1b9382b27
+
+    #  - name: Merge Specific Commit
+    #    run: |
+    #     git merge FETCH_HEAD
+    #  - name: Fetch Pull Request Branch
+    #    run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5817/merge
+    #  - name: Merge Commits
+     #   run: |
+      #    # Merge specific commits from the pull request
+       #   git merge FETCH_HEAD
+ #     - name: Fetch Pull Request Branch
+   #     run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5796/merge
+  #    - name: Merge Commits
+    #    run: |
+          # Merge specific commits from the pull request
+   #       git merge FETCH_HEAD
+    #  - name: Fetch Pull Request Branch
+  #      run: git fetch https://github.com/libre-tube/LibreTube.git +refs/pull/5757/merge
+ #     - name: Merge Commits
+   #     run: |
+          # Merge specific commits from the pull request
+    #      git merge FETCH_HEAD
+     # - name: Revert Commit
+   #     run: git revert 0b059ccc12ab5a6df89c3c61f34680ad18db5471 --no-edit
+      - name: Commands
+        run: |
+         sed -i '/android {/,/}/ s/isUniversalApk = true/isUniversalApk = false/' app/build.gradle.kts
+         sed -i 's/include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")/include("arm64-v8a")/g' app/build.gradle.kts
+      
+        #  git revert -v -n 0b059cc --no-edit -X theirs
+        #  sed -i '/import com\.github\.libretube\.ui\.extensions\.trySetTooltip/d' app/src/main/java/com/github/libretube/ui/views/CustomExoPlayerView.kt
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Gradle dependencies
+        id: cache-gradle
+        uses: actions/cache@v4
+        with:
+         path: |
+           ~/.gradle/caches
+           ~/.gradle/wrapper
+         key: gradle-${{ runner.os }}-libre-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+         restore-keys: |
+           gradle-${{ runner.os }}-libre-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease
+
+    #  - name: Upload APK
+   #     uses: actions/upload-artifact@v3
+   #     with:
+    #      name: Libre
+     #     path: app/build/outputs/apk/release/app-arm64-v8a*.apk
+      
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: app/build/outputs/apk/release/app-arm64-v8a*.apk
+          tag: Libre
+          overwrite: true
+          file_glob: true
+      - name: Archive reports for failed job
+        uses: actions/upload-artifact@v3
+        with:
+          name: reports
+          path: '*/build/reports'
+        if: ${{ failure() }}
