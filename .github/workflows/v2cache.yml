@@ -94,7 +94,7 @@ jobs:
       run: |
         cd ${{ github.workspace }}/V2rayNG
         chmod 755 gradlew
-        ./gradlew assembleRelease
+        ./gradlew assembleRelease --build-cache --parallel
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
