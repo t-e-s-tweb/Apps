@@ -35,7 +35,7 @@ jobs:
           path: |
             ~/.gradle/caches
             ~/.gradle/wrapper
-            app/build
+            ${{ github.workspace }}/Heliboard/.gradle
           key: gradle-${{ runner.os }}-heli-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', 'gradle.properties') }}
           restore-keys: |
             gradle-${{ runner.os }}-heli-
