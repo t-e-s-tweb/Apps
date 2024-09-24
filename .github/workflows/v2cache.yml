@@ -73,7 +73,7 @@ jobs:
           git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         fi
         cd AndroidLibXrayLite
-        go get github.com/xtls/xray-core@${{ github.event.inputs.XRAY_CORE_VERSION }} || true
+        go get github.com/xtls/xray-core@latest || true
         gomobile init
         go mod tidy -v
         gomobile bind -v -androidapi 21 -ldflags='-s -w' ./
