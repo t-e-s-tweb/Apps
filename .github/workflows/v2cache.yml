@@ -16,7 +16,7 @@ jobs:
       with:
         repository: 2dust/v2rayNG
         ref: master
-    - run: git revert c61595eb0d5c9feb9559ed9f22c150bd2a1aa80d --no-edit
+    
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
@@ -73,6 +73,7 @@ jobs:
           git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         fi
         cd AndroidLibXrayLite
+        git revert c61595eb0d5c9feb9559ed9f22c150bd2a1aa80d --no-edit
         if [ -z "${{ github.event.inputs.XRAY_CORE_VERSION }}" ]; then
          go get github.com/xtls/xray-core@main || true
         else
