@@ -1,0 +1,100 @@
+name: Build and Merge PRs
+
+on:
+  workflow_dispatch:
+    inputs:
+      XRAY_CORE_VERSION:
+        description: 'Xray core version or commit hash'
+        required: false
+
+jobs:
+  merge_prs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: List Pull Requests
+        id: list_prs
+        uses: peter-evans/pull-request-list@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          search: 'is:open is:pr base:master'  # Adjust if targeting a different branch
+
+      - name: Merge Pull Requests
+        if: steps.list_prs.outputs.prs != '[]'
+        run: |
+          echo "Merging pull requests..."
+          for pr in $(echo "${{ steps.list_prs.outputs.prs }}" | jq -r '.[] | .number'); do
+            gh pr merge "$pr" --merge --repo ${{ github.repository }}
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build:
+    needs: merge_prs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+            repository: 2dust/v2rayNG
+            ref: master
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Create empty go.sum if it does not exist
+        run: |
+          if [ ! -f go.sum ]; then
+            touch go.sum
+          fi
+
+      - name: Setup Golang
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22.4'
+      
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Setup Android environment
+        uses: android-actions/setup-android@v3
+
+      - name: Download libv2ray.aar
+        run: |
+          mkdir -p ${{ github.workspace }}/V2rayNG/app/libs/
+          curl -L -o ${{ github.workspace }}/V2rayNG/app/libs/libv2ray.aar https://github.com/2dust/AndroidLibXrayLite/releases/latest/download/libv2ray.aar
+
+      - name: Cache Gradle dependencies
+        id: cache-gradle
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            ${{ runner.os }}-gradle-
+
+      - name: Build APK
+        run: |
+          cd ${{ github.workspace }}/V2rayNG
+          chmod 755 gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+            repo_token: ${{ secrets.GITHUB_TOKEN }}
+            file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/release/*.apk
+            tag: v2
+            overwrite: true
+            file_glob: true
