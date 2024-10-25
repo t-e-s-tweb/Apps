@@ -1,4 +1,4 @@
-name: Build and Merge PRs
+name: Build v2 with Merged PRs
 
 on:
   workflow_dispatch:
@@ -8,32 +8,7 @@ on:
         required: false
 
 jobs:
-  merge_prs:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: List Pull Requests
-        id: list_prs
-        uses: peter-evans/pull-request-list@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          search: 'is:open is:pr base:master'  # Adjust if targeting a different branch
-
-      - name: Merge Pull Requests
-        if: steps.list_prs.outputs.prs != '[]'
-        run: |
-          echo "Merging pull requests..."
-          for pr in $(echo "${{ steps.list_prs.outputs.prs }}" | jq -r '.[] | .number'); do
-            gh pr merge "$pr" --merge --repo ${{ github.repository }}
-          done
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build:
-    needs: merge_prs
     runs-on: ubuntu-latest
 
     steps:
@@ -42,6 +17,24 @@ jobs:
         with:
             repository: 2dust/v2rayNG
             ref: master
+
+      - name: List Pull Requests
+        id: list_prs
+        uses: peter-evans/pull-request-list@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          search: 'is:open is:pr base:master'  # Adjust if targeting a different branch
+
+      - name: Pull and Merge Pull Requests
+        if: steps.list_prs.outputs.prs != '[]'
+        run: |
+          echo "Merging pull requests..."
+          for pr in $(echo "${{ steps.list_prs.outputs.prs }}" | jq -r '.[] | .number'); do
+            git fetch origin pull/$pr/head:pr-$pr
+            git merge pr-$pr --no-ff --no-edit
+          done
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Java
         uses: actions/setup-java@v4
