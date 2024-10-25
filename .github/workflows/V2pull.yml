@@ -1,4 +1,4 @@
-name: Build v2 with Merged PRs
+name: Build v2 with Local Merged PRs
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ jobs:
           repository: 2dust/v2rayNG
           ref: master
 
-      - name: Fetch and Merge Pull Requests
+      - name: Fetch and Merge Pull Requests Locally
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -26,8 +26,10 @@ jobs:
           pr_numbers=$(gh pr list --repo 2dust/v2rayNG --base master --state open --json number --jq '.[].number')
           
           for pr in $pr_numbers; do
+            echo "Fetching PR #$pr"
+            git fetch origin pull/$pr/head:pr-$pr
             echo "Merging PR #$pr"
-            gh pr merge $pr --repo 2dust/v2rayNG --merge --admin
+            git merge pr-$pr --no-ff --no-edit
           done
 
       - name: Setup Java
