@@ -1,4 +1,4 @@
-name: Build v2 with Local Merged PRs
+name: Build v2 with Cherry-Picked PRs
 
 on:
   workflow_dispatch:
@@ -18,18 +18,18 @@ jobs:
           repository: 2dust/v2rayNG
           ref: master
 
-      - name: Fetch and Merge Pull Requests Locally
+      - name: Fetch and Cherry-Pick Pull Requests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Listing open pull requests..."
           pr_numbers=$(gh pr list --repo 2dust/v2rayNG --base master --state open --json number --jq '.[].number')
-          
+
           for pr in $pr_numbers; do
             echo "Fetching PR #$pr"
             git fetch origin pull/$pr/head:pr-$pr
-            echo "Merging PR #$pr"
-            git merge pr-$pr --no-ff --no-edit
+            echo "Cherry-picking PR #$pr"
+            git cherry-pick --strategy=recursive -X theirs $(git log -1 --format=%H pr-$pr)
           done
 
       - name: Setup Java
