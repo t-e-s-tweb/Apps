@@ -17,7 +17,11 @@ jobs:
         with:
           repository: 2dust/v2rayNG
           ref: master
-
+      - name: ADD
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .  
       - name: Fetch and Cherry-Pick Pull Requests
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
