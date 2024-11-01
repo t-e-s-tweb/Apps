@@ -14,16 +14,16 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
           repository: 2dust/v2rayNG
           ref: master
 
     - name: Setup Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v4.5.0
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
     - name: Create empty go.sum if it does not exist
       run: |
         if [ ! -f go.sum ]; then
@@ -41,7 +41,7 @@ jobs:
 
 
     - name: Setup Android environment
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v3.2.1
 
 
     - name: Download libv2ray.aar
