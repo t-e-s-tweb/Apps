@@ -12,16 +12,16 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v4.2.2
       with:
         repository: 2dust/v2rayNG
         ref: master
     
     - name: Setup Java
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v4.5.0
       with:
         distribution: 'temurin'
-        java-version: '17'
+        java-version: '21'
 
     - name: Create empty go.sum if it does not exist
       run: |
@@ -32,7 +32,7 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v5
       with:
-        go-version: '1.22.2'
+        go-version: '1.22.4'
         cache: false
 
     # Cache Go modules
@@ -49,11 +49,11 @@ jobs:
 
     - name: Install gomobile
       run: |
-        go install golang.org/x/mobile/cmd/gomobile@latest
+        go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
         echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
 
     - name: Setup Android environment
-      uses: android-actions/setup-android@v3
+      uses: android-actions/setup-android@v3.2.1
 
     # Cache AndroidLibXrayLite repository
     - name: Cache AndroidLibXrayLite
@@ -98,7 +98,6 @@ jobs:
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
-        git revert c61595eb0d5c9feb9559ed9f22c150bd2a1aa80d --no-edit
         chmod 755 gradlew
         ./gradlew assembleRelease --build-cache --parallel
 
