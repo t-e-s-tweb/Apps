@@ -30,8 +30,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          repo: "imjyotiraditya/Echoir"
-          ref: "main"
+          repo: imjyotiraditya/Echoir
+          ref: main
 
       - name: Set up JDK
         uses: actions/setup-java@v4
