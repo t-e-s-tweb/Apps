@@ -123,7 +123,18 @@ jobs:
     - name: Setup Android environment
       uses: android-actions/setup-android@v3
 
-    
+    - name: Cache Gradle dependencies
+      id: cache-gradle
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ${{ github.workspace }}/V2rayNG/.gradle
+        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        restore-keys: |
+          ${{ runner.os }}-gradle-
+          
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
