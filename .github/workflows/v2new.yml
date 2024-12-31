@@ -40,7 +40,21 @@ jobs:
       # Same version as https://gitlab.com/fdroid/fdroiddata/metadata/com.v2ray.ang.yml
       with:
         ndk-version: r27
+        add-to-path: true
+        link-to-sdk: true
+        local-cache: true
 
+    - name: Restore Android Symlinks
+      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      run: |
+        directory="${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
+        find "$directory" -type l | while read link; do
+            current_target=$(readlink "$link")
+            new_target="$directory/$(basename "$current_target")"
+            ln -sf "$new_target" "$link"
+            echo "Changed $(basename "$link") from $current_target to $new_target"
+        done
+        
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
@@ -89,10 +103,9 @@ jobs:
         curl "https://go-review.googlesource.com/changes/go~600296/revisions/5/patch" | base64 -d | patch --verbose -p 1
 
     - name: Install gomobile
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
-        go install golang.org/x/mobile/cmd/gomobile@v0.0.0-20240806205939-81131f6468ab
-        echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+        go install github.com/sagernet/gomobile/cmd/gomobile@latest
+        export PATH=$PATH:~/go/bin
 
     - name: Build libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
