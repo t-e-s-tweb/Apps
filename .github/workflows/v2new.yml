@@ -34,7 +34,6 @@ jobs:
         key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
 
     - name: Setup Android NDK
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       uses: nttld/setup-ndk@v1
       id: setup-ndk
       # Same version as https://gitlab.com/fdroid/fdroiddata/metadata/com.v2ray.ang.yml
@@ -45,7 +44,6 @@ jobs:
         local-cache: true
 
     - name: Restore Android Symlinks
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
         directory="${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin"
         find "$directory" -type l | while read link; do
@@ -92,11 +90,9 @@ jobs:
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/setup-go@v5
       with:
-        go-version: '1.23.4'
-        cache: false
+        go-version-file: 'go.mod'
 
     - name: Patch Go use 600296
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       #https://go-review.googlesource.com/c/go/+/600296
       run: |
         cd "$(go env GOROOT)"
@@ -104,17 +100,16 @@ jobs:
 
     - name: Install gomobile
       run: |
-        go install github.com/sagernet/gomobile/cmd/gomobile@latest
+        CGO_ENABLED=0 go install -trimpath -ldflags="-w -s"  github.com/sagernet/gomobile/cmd/gomobile@latest
         export PATH=$PATH:~/go/bin
 
     - name: Build libv2ray
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
         go get github.com/xtls/xray-core@main || true
         gomobile init
-        go mod tidy -v
-        gomobile bind -v -androidapi 21 -ldflags='-s -w' ./
+        go mod tidy
+        gomobile bind -v -androidapi 21 -trimpath -buildvcs=false -ldflags='-s -w -buildid=' ./
 
     - name: Save libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
@@ -153,24 +148,14 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         chmod 755 gradlew
         ./gradlew assembleRelease
-
-    - name: Upload arm64-v8a APK
-      uses: actions/upload-artifact@v4
-      if: ${{  success() }}
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        
+    - name: Upload to release
+      uses: svenstaro/upload-release-action@v2
+      if: github.event.inputs.release_tag != ''
       with:
-        name: arm64-v8a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*arm64-v8a*.apk
-
-    - name: Upload armeabi-v7a APK
-      uses: actions/upload-artifact@v4
-      if: ${{  success() }}
-      with:
-        name: armeabi-v7a
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*armeabi-v7a*.apk
-
-    - name: Upload x86 APK
-      uses: actions/upload-artifact@v4
-      if: ${{  success() }}
-      with:
-        name: x86-apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*x86*.apk
+        file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*.apk
+        tag: ${{ github.event.inputs.release_tag }}
+        file_glob: true
+        prerelease: true
