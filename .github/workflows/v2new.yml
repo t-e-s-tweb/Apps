@@ -110,7 +110,8 @@ jobs:
         gomobile init
         go mod tidy
         gomobile bind -v -androidapi 21 -trimpath -buildvcs=false -ldflags='-s -w -buildid=' ./
-
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
     - name: Save libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
