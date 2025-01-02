@@ -104,6 +104,7 @@ jobs:
         export PATH=$PATH:~/go/bin
 
     - name: Build libv2ray
+      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
         go get github.com/xtls/xray-core@main || true
@@ -152,10 +153,9 @@ jobs:
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         
-    - name: Upload to release
-      uses: svenstaro/upload-release-action@v2
+    - name: Upload arm64-v8a APK
+      uses: actions/upload-artifact@v4
+      if: ${{  success() }}
       with:
-        file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*.apk
-        tag: ${{ github.event.inputs.release_tag }}
-        file_glob: true
-        prerelease: true
+        name: arm64-v8a
+        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*arm64-v8a*.apk
