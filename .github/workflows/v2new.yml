@@ -19,11 +19,11 @@ jobs:
       run: |
         mkdir ${{ github.workspace }}/build
 
-    - name: Fetch AndroidLibV2rayLite
+    - name: Fetch AndroidLibXrayLite
       run: |
         cd ${{ github.workspace }}/build
-        git clone --depth=1 -b master https://github.com/2dust/AndroidLibV2rayLite.git
-        cd AndroidLibV2rayLite
+        git clone --depth=1 -b master https://github.com/2dust/AndroidLibXrayLite.git
+        cd AndroidLibXrayLite
         git submodule update --init
 
     - name: Restore cached libtun2socks
