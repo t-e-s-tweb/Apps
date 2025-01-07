@@ -13,26 +13,17 @@ jobs:
       with:
         repository: 2dust/v2rayNG
         ref: master
-
-
-    - name: Prepare build dir
-      run: |
-        mkdir ${{ github.workspace }}/build
-
-    - name: Fetch AndroidLibV2rayLite
-      run: |
-        cd ${{ github.workspace }}/build
-        git clone --depth=1 -b master https://github.com/2dust/AndroidLibV2rayLite.git
-        cd AndroidLibV2rayLite
-        git submodule update --init
+        submodules: 'recursive'
+        fetch-depth: '0'
 
     - name: Restore cached libtun2socks
       id: cache-libtun2socks-restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ github.workspace }}/build/AndroidLibV2rayLite/libs
-        key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
+        path: ${{ github.workspace }}/AndroidLibXrayLite/libs
+        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/AndroidLibXrayLite/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/AndroidLibXrayLite/modules/libancillary/HEAD') }}
 
+    
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
       id: setup-ndk
@@ -56,29 +47,32 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/build/AndroidLibV2rayLite
+        cd ${{ github.workspace }}/AndroidLibXrayLite
         bash compile-tun2socks.sh
         tar -xvzf libtun2socks.so.tgz
-        cp -r libs/* ${{ github.workspace }}/V2rayNG/app/libs/
       env:
         NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
 
     - name: Save libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/build/AndroidLibV2rayLite/libs
-        key: libtun2socks-${{ runner.os }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/refs/heads/master') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/badvpn/HEAD') }}-${{ hashFiles('build/AndroidLibV2rayLite/.git/modules/libancillary/HEAD') }}
+        path: ${{ github.workspace }}/AndroidLibXrayLite/libs
+        key: libtun2socks-${{ runner.os }}-${{ hashFiles('.git/modules/AndroidLibXrayLite/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/AndroidLibXrayLite/modules/libancillary/HEAD') }}
 
     - name: Copy libtun2socks
       run: |
-        cp -r ${{ github.workspace }}/build/AndroidLibV2rayLite/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
+        cp -r ${{ github.workspace }}/AndroidLibXrayLite/libs ${{ github.workspace }}/V2rayNG/app
 
-    - name: Fetch AndroidLibXrayLite
+    - name: Fetch AndroidLibXrayLite tag
       run: |
-        cd ${{ github.workspace }}/build
-        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
-
+        pushd AndroidLibXrayLite
+        CURRENT_TAG=$(git describe --tags --abbrev=0)
+        echo "Current tag in this repo: $CURRENT_TAG"
+        echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
+        popd
+   
     - name: Restore cached libv2ray
       id: cache-libv2ray-restore
       uses: actions/cache/restore@v4
@@ -100,8 +94,9 @@ jobs:
 
     - name: Install gomobile
       run: |
-        CGO_ENABLED=0 go install -trimpath -ldflags="-w -s"  github.com/sagernet/gomobile/cmd/gomobile@latest
+        CGO_ENABLED=0 go install -trimpath -ldflags="-w -s" golang.org/x/mobile/cmd/gomobile@latest
         export PATH=$PATH:~/go/bin
+        
 
     - name: Build libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
@@ -110,7 +105,7 @@ jobs:
         go get github.com/xtls/xray-core@main || true
         gomobile init
         go mod tidy
-        gomobile bind -v -androidapi 21 -trimpath -buildvcs=false -ldflags='-s -w -buildid=' ./
+        gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
     - name: Save libv2ray
@@ -129,9 +124,33 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
-
     - name: Setup Android environment
       uses: android-actions/setup-android@v3
+      
+    - name: Restore cached libhysteria2
+      id: cache-libhysteria2-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
+    - name: Build libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      run: |
+        bash libhysteria2.sh
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Save libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
+
+    - name: Copy libhysteria2
+      run: |
+        cp -r ${{ github.workspace }}/hysteria/libs ${{ github.workspace }}/V2rayNG/app
+
 
     - name: Cache Gradle dependencies
       id: cache-gradle
