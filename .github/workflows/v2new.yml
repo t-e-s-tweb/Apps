@@ -15,6 +15,16 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
+    - name: Prepare build dir
+      run: |
+        mkdir ${{ github.workspace }}/build
+
+    - name: Fetch AndroidLibV2rayLite
+      run: |
+        cd ${{ github.workspace }}/build
+        git clone --depth=1 -b master https://github.com/2dust/AndroidLibV2rayLite.git
+        cd AndroidLibV2rayLite
+        git submodule update --init
 
     - name: Restore cached libtun2socks
       id: cache-libtun2socks-restore
@@ -65,13 +75,7 @@ jobs:
       run: |
         cp -r ${{ github.workspace }}/AndroidLibXrayLite/libs ${{ github.workspace }}/V2rayNG/app
 
-    - name: Fetch AndroidLibXrayLite tag
-      run: |
-        pushd AndroidLibXrayLite
-        CURRENT_TAG=$(git describe --tags --abbrev=0)
-        echo "Current tag in this repo: $CURRENT_TAG"
-        echo "CURRENT_TAG=$CURRENT_TAG" >> $GITHUB_ENV
-        popd
+    
    
     - name: Restore cached libv2ray
       id: cache-libv2ray-restore
@@ -101,7 +105,7 @@ jobs:
     - name: Build libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/AndroidLibXrayLite
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
         go get github.com/xtls/xray-core@main || true
         gomobile init
         go mod tidy
@@ -112,12 +116,12 @@ jobs:
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('AndroidLibXrayLite/.git/refs/heads/main') }}
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite/
+        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
 
     - name: Copy libv2ray
       run: |
-        cp -r ${{ github.workspace }}/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
+        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
 
     - name: Setup Java
       uses: actions/setup-java@v4
