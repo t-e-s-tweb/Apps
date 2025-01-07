@@ -101,7 +101,7 @@ jobs:
     - name: Build libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        cd ${{ github.workspace }}/AndroidLibXrayLite
         go get github.com/xtls/xray-core@main || true
         gomobile init
         go mod tidy
@@ -112,12 +112,12 @@ jobs:
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        path: ${{ github.workspace }}/AndroidLibXrayLite/
+        key: libv2ray-${{ runner.os }}-${{ hashFiles('AndroidLibXrayLite/.git/refs/heads/main') }}
 
     - name: Copy libv2ray
       run: |
-        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
+        cp -r ${{ github.workspace }}/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
 
     - name: Setup Java
       uses: actions/setup-java@v4
