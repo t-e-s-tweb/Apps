@@ -88,7 +88,7 @@ jobs:
       uses: actions/setup-go@v5
       with:
         go-version: '1.23.4'
-        cache: false
+        cache: true
 
     - name: Patch Go use 600296
       #https://go-review.googlesource.com/c/go/+/600296
