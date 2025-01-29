@@ -104,21 +104,15 @@ jobs:
        ./gradlew assembleRelease
        ls -laR app/build/outputs/apk/
 
-    - name: Find and Rename APK
-      run: |
-       mkdir -p dist
-       APK_PATH=$(find android/app/build/outputs/apk/ -name '*.apk' | grep release)
-       echo "Found APK at: $APK_PATH"
-       cp android/app/build/outputs/apk/app-release*.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+    
 
     
 
-    - name: Upload Release APK
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@2.7.0
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: FreeTubeAndroid/dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
-        asset_name: freetube-nightly-${{ github.run_number }}.apk
-        asset_content_type: application/vnd.android.package-archive
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/android/app/build/outputs/apk/release/app-release-unsigned.apk
+          tag: free
+          overwrite: true
+          file_glob: true
