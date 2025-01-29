@@ -99,12 +99,19 @@ jobs:
       run: cd android/ && chmod +x gradlew
 
     - name: Build with Gradle
-      run: cd android/ && ./gradlew assembleRelease
-
-    - name: Rename APK w/ version info
+      working-directory: FreeTubeAndroid
       run: |
-        mkdir -p dist
-        cp android/app/build/outputs/apk/release/app-release.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+       cd android/
+       ./gradlew assembleRelease
+       ls -laR app/build/outputs/apk/
+
+    - name: Find and Rename APK
+      working-directory: FreeTubeAndroid
+      run: |
+       mkdir -p dist
+       APK_PATH=$(find android/app/build/outputs/apk/ -name '*.apk' | grep release)
+       echo "Found APK at: $APK_PATH"
+       cp "$APK_PATH" dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
 
     
 
