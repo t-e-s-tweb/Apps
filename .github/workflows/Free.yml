@@ -1,0 +1,119 @@
+name: Build free
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: development
+
+    steps:
+    - name: Checkout Remote Repository
+      uses: actions/checkout@v3
+      with:
+        repository: MarmadileManteater/FreeTubeAndroid
+        ref: development
+        
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20.x
+        cache: "yarn"
+
+    - name: 🧶 Yarn install
+      run: yarn ci
+
+    - name: Set environment icon & splash for android app
+      run: |
+        node ./_scripts/_setAppSplashTheme.mjs --nightly
+
+    - name: 🔍Lint code
+      run: yarn lint
+      continue-on-error: true
+
+    - name: 📚Read package.json
+      id: pkg
+      uses: jaywcjlove/github-action-package@v1.3.0
+
+    - name: Set Version Number Variable
+      id: versionNumber
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          return '${{ steps.pkg.outputs.version }}-nightly-${{ github.run_number }}'
+
+    - name: Set App ID Variable
+      id: appId
+      uses: actions/github-script@v6
+      with:
+        result-encoding: string
+        script: |
+          return '${{ steps.pkg.outputs.name }}.nightly'
+
+    - name: ⬆ Update package.json version
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: version
+        value: ${{ steps.versionNumber.outputs.result }}
+
+    - name: ⬆ Update package.json app environment
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: name
+        value: ${{ steps.appId.outputs.result }}
+
+    - name: ⬆ Update package.json product name
+      uses: jossef/action-set-json-field@v2.1
+      with:
+        file: package.json
+        field: productName
+        value: ${{ steps.pkg.outputs.productName }} Nightly
+
+    - name: 📦 Pack for 🕸web with Node.js
+      run: yarn pack:web
+
+
+        
+    - name: Comment out signing config
+      run: |
+        sed -i 's/^\(\s*\)signingConfig = signingConfigs.getByName("debug")/\1\/\/ signingConfig = signingConfigs.getByName("debug")/g' android/app/build.gradle.kts
+
+    - name: Update name
+      run: |
+        sed -i 's/"FreeTube Android"/"FreeTube Nightly"/g' android/settings.gradle.kts
+        sed -i 's/FreeTube Android/FreeTube Nightly/g' android/app/src/main/res/values/strings.xml
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v3
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: cd android/ && chmod +x gradlew
+
+    - name: Build with Gradle
+      run: cd android/ && ./gradlew assembleRelease
+
+    - name: Rename APK w/ version info
+      run: |
+        mkdir -p dist
+        cp android/app/build/outputs/apk/release/app-release.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+
+    
+
+    - name: Upload Release APK
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: FreeTubeAndroid/dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+        asset_name: freetube-nightly-${{ github.run_number }}.apk
+        asset_content_type: application/vnd.android.package-archive
