@@ -105,7 +105,6 @@ jobs:
        ls -laR app/build/outputs/apk/
 
     - name: Find and Rename APK
-      working-directory: FreeTubeAndroid
       run: |
        mkdir -p dist
        APK_PATH=$(find android/app/build/outputs/apk/ -name '*.apk' | grep release)
