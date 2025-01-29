@@ -77,7 +77,10 @@ jobs:
     - name: 📦 Pack for 🕸web with Node.js
       run: yarn pack:web
 
-
+    - name: 📦 Pack for 📱Android
+      run: |
+        yarn pack:botGuardScript:android
+        yarn pack:android:dev
         
     - name: Comment out signing config
       run: |
