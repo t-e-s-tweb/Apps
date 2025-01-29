@@ -109,7 +109,7 @@ jobs:
        mkdir -p dist
        APK_PATH=$(find android/app/build/outputs/apk/ -name '*.apk' | grep release)
        echo "Found APK at: $APK_PATH"
-       cp "$APK_PATH" dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
+       cp android/app/build/outputs/apk/app-release*.apk dist/freetube-${{ steps.versionNumber.outputs.result }}-Android.apk
 
     
 
