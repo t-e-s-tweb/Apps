@@ -13,7 +13,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: MarmadileManteater/FreeTubeAndroid
-        ref: move-context-out-of-js-interface
+        ref: development
         
 
     - name: Use Node.js
