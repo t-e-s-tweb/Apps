@@ -1,20 +1,20 @@
-name: Cleanup Workflow Runs
-
-on: workflow_dispatch
-
-# REMOVE IF THE TOKEN YOU ARE USING ALREADY HAS THESE PERMISSIONS
-permissions:
-  actions: write
-  contents: read
+name: Delete old workflow runs
+on:
+  schedule:
+    - cron: '0 0 1 * *'
+# Run monthly, at 00:00 on the 1st day of month.
 
 jobs:
-  cleanup:
+  del_runs:
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Delete Workflow Runs
-        uses: EminDevNoth/workflow-runs-remover@v1.0.0
+      - name: Delete workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 1
+          keep_minimum_runs: 6
