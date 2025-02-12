@@ -158,15 +158,15 @@ jobs:
           ~/.gradle/caches
           ~/.gradle/wrapper
           ${{ github.workspace }}/V2rayNG/.gradle
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle-x-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
         restore-keys: |
-          ${{ runner.os }}-gradle-
+          ${{ runner.os }}-gradle-x
           
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         chmod 755 gradlew
-        ./gradlew assembleRelease
+        ./gradlew assembleRelease --parallel --build-cache --configure-on-demand --max-workers=4
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         
