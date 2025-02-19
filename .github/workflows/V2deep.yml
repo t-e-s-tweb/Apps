@@ -50,7 +50,7 @@ jobs:
     - name: Build libtun2socks (if cache miss)
       if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/build/
+        cd ${{ github.workspace }}/V2rayNG
         bash compile-tun2socks.sh
         tar -xvzf libtun2socks.so.tgz -C libs/
       env:
