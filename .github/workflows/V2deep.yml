@@ -150,8 +150,6 @@ jobs:
       id: gradle-cache
       with:
         path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
           ${{ github.workspace }}/V2rayNG/.gradle
         key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
 
