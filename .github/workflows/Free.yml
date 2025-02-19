@@ -96,7 +96,9 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
+        
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4    
 
     - name: Grant execute permission for gradlew
       run: cd android/ && chmod +x gradlew
@@ -104,7 +106,7 @@ jobs:
     - name: Build with Gradle
       run: |
        cd android/
-       ./gradlew assembleRelease
+       ./gradlew assembleRelease --build-cache
        ls -laR app/build/outputs/apk/
 
     
