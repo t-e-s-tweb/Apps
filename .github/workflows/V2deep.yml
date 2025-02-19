@@ -61,7 +61,7 @@ jobs:
       if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
       run: |
         bash compile-tun2socks.sh
-        tar -xvzf libtun2socks.so.tgz -C ${{ github.workspace }}/libs
+        tar -xvzf libtun2socks.so.tgz
       env:
         NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
@@ -71,6 +71,9 @@ jobs:
       with:
         path: ${{ github.workspace }}/libs
         key: ${{ steps.cache-libtun2socks.outputs.cache-primary-key }}
+    - name: Copy libtun2socks
+      run: |
+        cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
 
     # Cache for libv2ray
     - name: Restore libv2ray cache
