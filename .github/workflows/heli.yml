@@ -17,7 +17,7 @@ jobs:
         with:
           repository: Helium314/HeliBoard
           # Checkout the branch being built, not always main
-          ref: ${{ github.ref }}
+          ref: main
 
       - name: Set up JDK
         uses: actions/setup-java@v4
