@@ -56,7 +56,7 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-deps.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        
         bash compile-tun2socks.sh
         tar -xvzf libtun2socks.so.tgz
       env:
