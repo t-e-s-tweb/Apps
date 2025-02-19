@@ -4,10 +4,9 @@ on:
   workflow_dispatch:
 
 jobs:
-  prepare:
+  build:
     runs-on: ubuntu-latest
-    outputs:
-      cache-key: ${{ steps.generate-cache-key.outputs.cache-key }}
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -16,30 +15,20 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
-
-    - name: Generate cache key
-      id: generate-cache-key
-      run: |
-        echo "cache-key=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
 
     - name: Prepare build environment
       run: |
         mkdir -p ${{ github.workspace }}/build
         mkdir -p ${{ github.workspace }}/V2rayNG/app/libs
 
-  build-libs:
-    runs-on: ubuntu-latest
-    needs: prepare
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        repository: 2dust/v2rayNG
-        ref: master
-        submodules: 'recursive'
-        fetch-depth: '0'
+    - name: Fetch AndroidLibXrayLite
+      run: |
+        cd ${{ github.workspace }}/build
+        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
+        cd AndroidLibXrayLite
+        git submodule update --init
 
-    - name: Restore cache
+    - name: Cache dependencies
       id: cache-deps
       uses: actions/cache@v4
       with:
@@ -47,17 +36,13 @@ jobs:
           ${{ github.workspace }}/AndroidLibXrayLite/libs
           ${{ github.workspace }}/build/AndroidLibXrayLite/
           ${{ github.workspace }}/hysteria/libs
-        key: libs-${{ needs.prepare.outputs.cache-key }}
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ~/.gradle/build-cache
+          ${{ github.workspace }}/V2rayNG/.gradle
+        key: deps-${{ runner.os }}-${{ hashFiles('.git/modules/**/HEAD', '**/*.gradle*', '**/gradle-wrapper.properties', 'libhysteria2.sh') }}
         restore-keys: |
-          libs-
-
-    - name: Fetch AndroidLibXrayLite
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      run: |
-        cd ${{ github.workspace }}/build
-        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
-        cd AndroidLibXrayLite
-        git submodule update --init
+          deps-${{ runner.os }}-
 
     - name: Setup Android NDK
       uses: nttld/setup-ndk@v1
@@ -107,43 +92,6 @@ jobs:
       env:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
-    - name: Save cache
-      if: steps.cache-deps.outputs.cache-hit != 'true'
-      uses: actions/cache@v4
-      with:
-        path: |
-          ${{ github.workspace }}/AndroidLibXrayLite/libs
-          ${{ github.workspace }}/build/AndroidLibXrayLite/
-          ${{ github.workspace }}/hysteria/libs
-        key: libs-${{ needs.prepare.outputs.cache-key }}
-        restore-keys: |
-          libs-
-
-  build-apk:
-    runs-on: ubuntu-latest
-    needs: [prepare, build-libs]
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        repository: 2dust/v2rayNG
-        ref: master
-        submodules: 'recursive'
-        fetch-depth: '0'
-
-    - name: Restore Gradle cache
-      id: cache-gradle
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-          ~/.gradle/build-cache
-          ${{ github.workspace }}/V2rayNG/.gradle
-        key: gradle-${{ needs.prepare.outputs.cache-key }}
-        restore-keys: |
-          gradle-
-
     - name: Copy libraries to V2rayNG
       run: |
         cp -r ${{ github.workspace }}/AndroidLibXrayLite/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
@@ -163,7 +111,7 @@ jobs:
       uses: gradle/gradle-build-action@v3
       with:
         arguments: assembleRelease --parallel --build-cache --configure-on-demand --max-workers=4
-        cache-read-only: ${{ steps.cache-gradle.outputs.cache-hit == 'true' }}
+        cache-read-only: ${{ steps.cache-deps.outputs.cache-hit == 'true' }}
 
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
