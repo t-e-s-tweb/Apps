@@ -61,7 +61,7 @@ jobs:
       if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
       run: |
         bash compile-tun2socks.sh
-        tar -xvzf libtun2socks.so.tgz -C libs/
+        tar -xvzf libtun2socks.so.tgz -C ${{ github.workspace }}/libs
       env:
         NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
 
