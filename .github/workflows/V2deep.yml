@@ -50,7 +50,6 @@ jobs:
     - name: Build libtun2socks (if cache miss)
       if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
       run: |
-        cd ${{ github.workspace }}/V2rayNG
         bash compile-tun2socks.sh
         tar -xvzf libtun2socks.so.tgz -C libs/
       env:
@@ -60,7 +59,7 @@ jobs:
       if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/build/AndroidLibXrayLite/libs
+        path: ${{ github.workspace }}/libs
         key: ${{ steps.cache-libtun2socks.outputs.cache-primary-key }}
 
     # Cache for libv2ray
@@ -87,6 +86,7 @@ jobs:
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
         export PATH=$PATH:$(go env GOPATH)/bin
         go install golang.org/x/mobile/cmd/gomobile@latest
+        go get github.com/xtls/xray-core@main || true
         gomobile init
         go mod tidy
         gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
@@ -155,8 +155,11 @@ jobs:
         ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         GRADLE_OPTS: -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true
 
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@2.7.0
       with:
-        name: release-apk
-        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/**/*.apk
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*.apk
+          tag: v2
+          overwrite: true
+          file_glob: true
