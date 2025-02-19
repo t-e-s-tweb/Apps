@@ -1,0 +1,162 @@
+name: Optimized Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        repository: 2dust/v2rayNG
+        ref: master
+        submodules: 'recursive'
+        fetch-depth: 0
+
+    - name: Prepare build directories
+      run: |
+        mkdir -p ${{ github.workspace }}/build
+        mkdir -p ${{ github.workspace }}/V2rayNG/app/libs
+
+    - name: Fetch AndroidLibXrayLite
+      run: |
+        cd ${{ github.workspace }}/build
+        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
+        cd AndroidLibXrayLite
+        git submodule update --init --recursive
+
+    # Cache for libtun2socks
+    - name: Restore libtun2socks cache
+      id: cache-libtun2socks
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite/libs
+        key: |
+          tun2socks-${{ runner.os }}-
+          ${{ hashFiles('build/AndroidLibXrayLite/.git/modules/badvpn/HEAD') }}-
+          ${{ hashFiles('build/AndroidLibXrayLite/compile-tun2socks.sh') }}
+
+    - name: Setup Android NDK
+      uses: nttld/setup-ndk@v1
+      id: setup-ndk
+      with:
+        ndk-version: r27
+        add-to-path: true
+        local-cache: true
+
+    - name: Build libtun2socks (if cache miss)
+      if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
+      run: |
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        bash compile-tun2socks.sh
+        tar -xvzf libtun2socks.so.tgz -C libs/
+      env:
+        NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Save libtun2socks cache
+      if: steps.cache-libtun2socks.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite/libs
+        key: ${{ steps.cache-libtun2socks.outputs.cache-primary-key }}
+
+    # Cache for libv2ray
+    - name: Restore libv2ray cache
+      id: cache-libv2ray
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite
+        key: |
+          libv2ray-${{ runner.os }}-
+          ${{ hashFiles('build/AndroidLibXrayLite/go.mod') }}-
+          ${{ hashFiles('build/AndroidLibXrayLite/go.sum') }}
+
+    - name: Setup Golang
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.24'
+        cache: true
+        cache-dependency-path: build/AndroidLibXrayLite/go.sum
+
+    - name: Build libv2ray (if cache miss)
+      if: steps.cache-libv2ray.outputs.cache-hit != 'true'
+      run: |
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        export PATH=$PATH:$(go env GOPATH)/bin
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        gomobile init
+        go mod tidy
+        gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Save libv2ray cache
+      if: steps.cache-libv2ray.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite
+        key: ${{ steps.cache-libv2ray.outputs.cache-primary-key }}
+
+    # Cache for libhysteria2
+    - name: Restore hysteria cache
+      id: cache-hysteria
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: |
+          hysteria-${{ runner.os }}-
+          ${{ hashFiles('hysteria/go.mod') }}-
+          ${{ hashFiles('libhysteria2.sh') }}
+
+    - name: Build libhysteria2 (if cache miss)
+      if: steps.cache-hysteria.outputs.cache-hit != 'true'
+      run: |
+        bash libhysteria2.sh
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+
+    - name: Save hysteria cache
+      if: steps.cache-hysteria.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: ${{ steps.cache-hysteria.outputs.cache-primary-key }}
+
+    - name: Copy libraries
+      run: |
+        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
+        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
+        cp -r ${{ github.workspace }}/hysteria/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
+
+    # Gradle caching
+    - name: Restore Gradle cache
+      uses: actions/cache/restore@v4
+      id: gradle-cache
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+          ${{ github.workspace }}/V2rayNG/.gradle
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+
+    - name: Build APK
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        chmod +x gradlew
+        ./gradlew assembleRelease \
+          --parallel \
+          --build-cache \
+          --configure-on-demand \
+          --max-workers=$(nproc)
+      env:
+        ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        GRADLE_OPTS: -Dorg.gradle.daemon=true -Dorg.gradle.parallel=true
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: release-apk
+        path: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/**/*.apk
