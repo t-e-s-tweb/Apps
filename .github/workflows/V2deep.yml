@@ -140,9 +140,9 @@ jobs:
 
     - name: Copy libraries
       run: |
-        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
         cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
-        cp -r ${{ github.workspace }}/hysteria/libs/* ${{ github.workspace }}/V2rayNG/app/libs/
+        
+        cp -r ${{ github.workspace }}/hysteria/libs ${{ github.workspace }}/V2rayNG/app
 
     # Gradle caching
     - name: Restore Gradle cache
