@@ -27,7 +27,7 @@ jobs:
 
       
       - name: Build & assemble
-        run: ./gradlew build assembleRelease
+        run: ./gradlew build assembleRelease --build-cache
         
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
