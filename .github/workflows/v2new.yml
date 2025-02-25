@@ -81,7 +81,7 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
 
     - name: Setup Golang
       uses: actions/setup-go@v5
