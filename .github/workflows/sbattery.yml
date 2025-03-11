@@ -55,12 +55,7 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease --stacktrace
 
-    #  - name: Upload APK
-    #    uses: actions/upload-artifact@v3
-    #    with:
-     #     name: KISS
-       #   path: app/build/outputs/apk/release/*.apk
-      
+    
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.9.0
         with:
