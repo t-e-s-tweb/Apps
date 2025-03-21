@@ -114,8 +114,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
-    - name: Setup Android environment
-      uses: android-actions/setup-android@v3
+   
       
     - name: Restore cached libhysteria2
       id: cache-libhysteria2-restore
