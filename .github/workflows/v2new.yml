@@ -52,9 +52,7 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
-        #Insert the necessary sed commands into compile-tun2socks.sh to remove duplicate LOCAL_MODULE
         sed -i '/install -m644 "$__dir\/tun2socks.mk" "$TMPDIR\//a \
-        # Remove duplicate LOCAL_MODULE := tun2socks in the copied file using sed\\
         sed -i '\''0,/LOCAL_MODULE := tun2socks/s//KEEP_THIS/'\'' "$TMPDIR/tun2socks.mk"\\
         sed -i '\''/LOCAL_MODULE := tun2socks/d'\'' "$TMPDIR/tun2socks.mk"\\
         sed -i '\''s/KEEP_THIS/LOCAL_MODULE := tun2socks/'\'' "$TMPDIR/tun2socks.mk"\\
