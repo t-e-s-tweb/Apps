@@ -1,0 +1,242 @@
+name: BUILD_APK_BY_MANUAL
+
+on:
+  workflow_dispatch:
+    inputs:
+      x_branch:
+        description: "指定Xray-core分支"
+        required: true
+        default: "main"
+        type: choice
+        options:
+          - "main"
+      x_commit_id:
+        description: "指定Xray-core使用commit id版本"
+        required: true
+        default: "HEAD~0"
+        type: string
+      x_lib_repo:
+        description: "指定AndroidLibXrayLite仓库"
+        required: true
+        default: "2dust"
+        type: choice
+        options:
+          - "DTCproto"
+          - "2dust"
+      x_lib_branch:
+        description: "指定AndroidLibXrayLite分支"
+        required: true
+        default: "main"
+        type: string
+      x_lib_commit_id:
+        description: "指定AndroidLibXrayLite使用commit id版本"
+        required: true
+        default: "HEAD~0"
+        type: string
+      ng_repo:
+        description: "指定v2rayNG仓库"
+        required: true
+        default: "2dust"
+        type: choice
+        options:
+          - "2dust"
+      ng_branch:
+        description: "指定v2rayNG分支"
+        required: true
+        default: "master"
+        type: string
+      ng_commit_id:
+        description: "指定v2rayNG使用commit id版本"
+        required: true
+        default: "HEAD~0"
+        type: string
+      release_archives:
+        description: "enable release archives"
+        default: true
+        type: boolean
+
+concurrency:
+  group: ${{ github.workflow }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+      - name: java version
+        run: |
+          java --version
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.24"
+      - name: Install gomobile
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          echo "$(go env GOPATH)/bin" >> $GITHUB_PATH
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: git clone v2rayNG
+        run: |
+          mkdir -p ${{ github.workspace }}/build
+          cd ${{ github.workspace }}/build
+          git clone -b ${{ inputs.ng_branch }} https://github.com/${{ inputs.ng_repo }}/v2rayNG.git
+          cd ${{ github.workspace }}/build/v2rayNG
+          git reset --hard ${{ inputs.ng_commit_id }}
+
+      - name: edit v2rayNG source code
+        run: |
+          cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
+          chmod 755 *
+          sed -i 's/applicationId = "com.v2ray.ang"/applicationId = "com.xray.ang.dev"/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+
+   #   - name: import apk sign config
+     #   run: |
+       #   cp ${{ github.workspace }}/.github/workflows/dt.jks ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/dt.jks
+
+      - name: git clone AndroidLibXrayLite
+        run: |
+          mkdir -p ${{ github.workspace }}/build
+          cd ${{ github.workspace }}/build
+          git clone -b ${{ inputs.x_lib_branch }} https://github.com/${{ inputs.x_lib_repo }}/AndroidLibXrayLite.git
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          git reset --hard ${{ inputs.x_lib_commit_id }}
+
+      - name: use git remote repo xray
+        run: |
+          mkdir -p ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild
+          rm -rf Xray-core
+          git clone -b ${{ inputs.x_branch }} https://github.com/XTLS/Xray-core.git
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
+          git reset --hard ${{ inputs.x_commit_id }}
+          echo "x_short_version=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+
+      - name: edit lib version
+        run: |
+          sed -i 's/var version/\/\/ var version/g' ${{ github.workspace }}/build/AndroidLibXrayLite/libv2ray_main.go
+          echo ${{ env.x_short_version }} | xargs -I '{}' sed -i 's/fmt.Sprintf("Lib v%d, Xray-core v%s", version, v2core.Version())/fmt.Sprintf("(Lib)Xray-core v%s", v2core.Version()+"@{}")/g' ${{ github.workspace }}/build/AndroidLibXrayLite/libv2ray_main.go
+
+      - name: fix lib conflict
+        run: |
+          cp -rf ${{ github.workspace }}/ext/nouse.go ${{ github.workspace }}/build/AndroidLibXrayLite
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          go get google.golang.org/genproto@v0.0.0-20241216192217-9240e9c98484
+
+      - name: go get specify xray
+        run: |
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          go get github.com/xtls/xray-core@${{ env.x_short_version }}
+
+      - name: Build xray
+        run: |
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
+          mkdir build_assets
+          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o build_assets/xray -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -v -o build_assets/xray_arm64 -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
+          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o build_assets/xray.exe -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
+
+      - name: Build aar
+        run: |
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          gomobile init
+          go mod tidy -v
+          gomobile bind -v -androidapi 21 -ldflags='-s -w' ./
+          mkdir -p ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs
+          cp *.aar ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
+
+      - name: Build APK
+        run: |
+          cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
+          ./gradlew assembleRelease
+
+      - name: Upload xray exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: bin-${{ env.x_short_version }}
+          compression-level: 9
+          path: |
+            ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets/*
+
+      - name: Upload aar
+        uses: actions/upload-artifact@v4
+        with:
+          name: aar-${{ env.x_short_version }}
+          compression-level: 9
+          path: |
+            ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar
+
+      - name: Upload arm dev apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks_arm_v8a_dev-${{ env.x_short_version }}
+          compression-level: 9
+          path: |
+            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build/outputs/apk/**/*.apk
+            !${{ github.workspace }}/**/*null*
+            !${{ github.workspace }}/**/*x86*
+            !${{ github.workspace }}/**/*riscv*
+            !${{ github.workspace }}/**/*mips*
+            !${{ github.workspace }}/**/*armeabi*
+            !${{ github.workspace }}/**/*universal*
+
+      - name: Upload all dev apk
+        uses: actions/upload-artifact@v4
+        with:
+          name: apks_all_dev-${{ env.x_short_version }}
+          compression-level: 9
+          path: |
+            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build/outputs/apk/**/*.apk
+
+  release:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get current date time
+        run: |
+          echo "current_date_time=$(date +'%Y-%m-%d-%H-%M')" >> "$GITHUB_ENV"
+
+      - name: Download TEMP archives
+        uses: actions/download-artifact@v4
+        if: ${{ inputs.release_archives }}
+        with:
+          pattern: "apks_all*"
+          merge-multiple: true
+          path: ${{ github.workspace }}/temp
+
+      - name: show down files
+        if: ${{ inputs.release_archives }}
+        run: |
+          ls -R ${{ github.workspace }}/temp
+
+      - name: 7-Zip files binaries
+        if: ${{ inputs.release_archives }}
+        run: |
+          find ${{ github.workspace }}/temp/ -type f -name "*.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_all-V-${{ env.current_date_time }}.7z
+          find ${{ github.workspace }}/temp/ -type f -name "*arm64-v8a.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_arm_v8a-V-${{ env.current_date_time }}.7z
+
+      - name: show zip files
+        if: ${{ inputs.release_archives }}
+        run: |
+          ls -R ${{ github.workspace }}/archives
+
+      - name: Release archives
+        uses: softprops/action-gh-release@v2
+        if: ${{ inputs.release_archives }}
+        with:
+          tag_name: "V-${{ env.current_date_time }}"
+          name: "V-${{ env.current_date_time }}"
+          token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: false
+          body: "V2rayNG(Xray) build result."
+          files: |
+            ${{ github.workspace }}/archives/**
