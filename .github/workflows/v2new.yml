@@ -52,6 +52,9 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
+        sed -i '0,/LOCAL_MODULE := tun2socks/s//KEEP_THIS/' tun2socks.mk
+        sed -i '/LOCAL_MODULE := tun2socks/d' tun2socks.mk
+        sed -i 's/KEEP_THIS/LOCAL_MODULE := tun2socks/' tun2socks.mk
         bash compile-tun2socks.sh
 
     - name: Save libtun2socks
