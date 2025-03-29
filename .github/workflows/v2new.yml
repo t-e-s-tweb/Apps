@@ -18,7 +18,9 @@ jobs:
     - name: Prepare build dir
       run: |
         mkdir ${{ github.workspace }}/build
-
+    - name: Fix tun2socks.mk
+      run: |
+       sed -i '/include $(BUILD_SYSTEM)\/build-module.mk/d' "${{ github.workspace }}/tun2socks.mk"
     - name: Fetch AndroidLibXrayLite
       run: |
         cd ${{ github.workspace }}/build
