@@ -52,11 +52,6 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
-        sed -i '/install -m644 "$__dir\/tun2socks.mk" "$TMPDIR\//a \
-        sed -i '\''0,/LOCAL_MODULE := tun2socks/s//KEEP_THIS/'\'' "$TMPDIR/tun2socks.mk"\\
-        sed -i '\''/LOCAL_MODULE := tun2socks/d'\'' "$TMPDIR/tun2socks.mk"\\
-        sed -i '\''s/KEEP_THIS/LOCAL_MODULE := tun2socks/'\'' "$TMPDIR/tun2socks.mk"\\
-        ' compile-tun2socks.sh
         bash compile-tun2socks.sh
 
     - name: Save libtun2socks
