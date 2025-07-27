@@ -1,6 +1,5 @@
 name: Build v2hev
        
-
 on:
   workflow_dispatch:
 
@@ -43,12 +42,6 @@ jobs:
         \
             ndkVersion = "29.0.13113456"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
  
-    - name: Restore cached libtun2socks
-    
-    
-
-    
-   
     - name: Restore cached libv2ray
       id: cache-libv2ray-restore
       uses: actions/cache/restore@v4
@@ -94,7 +87,6 @@ jobs:
         distribution: 'temurin'
         java-version: '21'
    
-      
     - name: Restore cached libhysteria2
       id: cache-libhysteria2-restore
       uses: actions/cache/restore@v4
