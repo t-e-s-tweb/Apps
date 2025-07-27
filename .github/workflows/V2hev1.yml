@@ -76,7 +76,9 @@ jobs:
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
         key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
-
+    - name: Prepare build dir
+      run: |
+        mkdir ${{ github.workspace }}/V2rayNG/app/libs/
     - name: Copy libv2ray
       run: |
         cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
