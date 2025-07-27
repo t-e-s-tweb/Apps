@@ -15,7 +15,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4.2.2
       with:
-        repository: DTCproto/v2rayNG
+        repository: DHR60/v2rayNG
         ref: self_use_build
         submodules: 'recursive'
         fetch-depth: '0'
