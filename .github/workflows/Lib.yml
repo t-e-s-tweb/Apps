@@ -37,15 +37,15 @@ jobs:
         echo "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
 
     # 4. Clone MuPDF 1.23.7
-    - name: Clone MuPDF 1.23.7
-      run: |
-        git clone --depth=1 --branch 1.23.7 https://git.ghostscript.com/mupdf.git mupdf-1.23.7
+  #  - name: Clone MuPDF 1.23.7
+  #    run: |
+  #    git clone --depth=1 --branch 1.23.7 https://git.ghostscript.com/mupdf.git mupdf-1.23.7
 
     # 5. Link MuPDF into the build tree
     - name: Run link_to_mupdf_1.23.7.sh
       run: |
         cd Builder
-        ./link_to_mupdf_1.23.7.sh
+        ./link_to_mupdf_1.23.7.sh fdroid
         cd ..
 
     # 6. Build the F-Droid variant
