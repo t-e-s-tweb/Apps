@@ -1,0 +1,60 @@
+name: Build Librera F-Droid APK
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Check out the LibreraReader sources
+    - name: Checkout LibreraReader
+      uses: actions/checkout@v4
+      with:
+        repository: foobnix/LibreraReader
+        ref: master
+
+    # 2. Set up JDK 11 (AGP 7.x requirement)
+    - name: Set up JDK 11
+      uses: actions/setup-java@v3
+      with:
+        distribution: 'temurin'
+        java-version: 11
+
+    # 3. Install the Android SDK & NDK
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+
+    - name: Install NDK
+      run: |
+        sdkmanager --install "ndk;23.2.8568313"  # 23.x works fine with MuPDF 1.23.x
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/23.2.8568313" >> $GITHUB_ENV
+        echo "$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+
+    # 4. Clone MuPDF 1.23.7
+    - name: Clone MuPDF 1.23.7
+      run: |
+        git clone --depth=1 --branch 1.23.7 https://git.ghostscript.com/mupdf.git mupdf-1.23.7
+
+    # 5. Link MuPDF into the build tree
+    - name: Run link_to_mupdf_1.23.7.sh
+      run: |
+        cd Builder
+        ./link_to_mupdf_1.23.7.sh
+        cd ..
+
+    # 6. Build the F-Droid variant
+    - name: Build F-Droid APK
+      run: ./gradlew assembleFdroid --no-daemon --stacktrace
+
+    # 7. Upload the resulting APK as an artifact
+    - name: Upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: librera-fdroid-apk
+        path: app/build/outputs/apk/fdroid/*.apk
