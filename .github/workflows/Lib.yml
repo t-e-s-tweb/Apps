@@ -47,6 +47,11 @@ jobs:
         cd Builder
         ./link_to_mupdf_1.23.7.sh fdroid
         cd ..
+    # ----------  remove signing config  ----------
+    - name: Strip release signing from build.gradle
+      run: |
+        sed -i '/^ *signingConfigs {/,/^ *}/d' app/build.gradle
+        sed -i '/ *signingConfig signingConfigs\.release/d' app/build.gradle
 
     # 6. Build the F-Droid variant
     - name: Build F-Droid APK
