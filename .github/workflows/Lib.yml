@@ -48,14 +48,14 @@ jobs:
         ./link_to_mupdf_1.23.7.sh fdroid
         cd ..
     # ----------  remove signing config  ----------
-    - name: Strip release signing and fix trailing comma
+    - name: Strip release signing and remove packagingOptions
       run: |
         # 1. Remove signingConfigs and its usage
         sed -i '/^ *signingConfigs {/,/^ *}/d' app/build.gradle
         sed -i '/ *signingConfig signingConfigs\.release/d' app/build.gradle
 
-        # 2. Remove illegal trailing comma in excludes.addAll
-        sed -i -e '/NOTICE\.txt.*,$/s/,//' app/build.gradle
+        # 2. Remove the whole packagingOptions block
+        sed -i '/^ *packagingOptions {/,/^ *}/d' app/build.gradle
 
 
     # 6. Build the F-Droid variant
