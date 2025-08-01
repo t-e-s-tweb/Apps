@@ -143,8 +143,8 @@ jobs:
         run: |
            sed -i '/appendLine("  udp: '\''udp'\''")/a\
             appendLine("mapdns:")\
-            appendLine("  address: 198.18.0.2")\
-            appendLine("  port: 53")\
+            appendLine("  address: 127.0.0.1")\
+            appendLine("  port: 10853")\
             appendLine("  network: 240.0.0.0")\
             appendLine("  netmask: 240.0.0.0")\
             appendLine("  cache-size: 10000")' \
