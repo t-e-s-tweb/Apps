@@ -73,7 +73,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: 'true'
-
+          repository: DTCproto/NG
+          ref: main
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -151,6 +152,9 @@ jobs:
       - name: add v2rayNG ndk version
         run: |
           sed -i $'10i\\\n    ndkVersion = "${{ env.use_ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+      - name: import apk sign config
+        run: |
+          cp ${{ github.workspace }}/.github/workflows/dt.jks ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/dt.jks
 
       - name: git clone AndroidLibXrayLite
         run: |
@@ -227,7 +231,7 @@ jobs:
         run: |
           tree ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/build/v2rayNG/V2rayNG/app/dt.jks -Pandroid.injected.signing.store.password="dt@pwd" -Pandroid.injected.signing.key.alias="dt" -Pandroid.injected.signing.key.password="dt@pwd"
 
       - name: Upload xray exe
         if: ${{ inputs.build_xray_elf }}
