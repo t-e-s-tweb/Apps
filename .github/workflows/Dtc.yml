@@ -146,6 +146,7 @@ jobs:
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
           chmod 755 *
           sed -i 's/applicationId = "com.v2ray.ang"/applicationId = "com.xray.ang.hev.dev"/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+      
       - name: add mapdns
         run: |
            sed -i '/appendLine("  udp: '\''udp'\''")/a\
@@ -156,6 +157,7 @@ jobs:
             appendLine("  netmask: 240.0.0.0")\
             appendLine("  cache-size: 10000")' \
             ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/service/HevTun2SocksService.kt
+      
       - name: add v2rayNG ndk version
         run: |
           sed -i $'10i\\\n    ndkVersion = " ${{ inputs.ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
