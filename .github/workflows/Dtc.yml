@@ -151,7 +151,7 @@ jobs:
         run: |
            sed -i '/appendLine("  udp: '\''udp'\''")/a\
             appendLine("mapdns:")\
-            appendLine("  address: 8.8.8.8")\
+            appendLine("  address: 198.18.0.2")\
             appendLine("  port: 53")\
             appendLine("  network: 240.0.0.0")\
             appendLine("  netmask: 240.0.0.0")\
