@@ -143,12 +143,12 @@ jobs:
         run: |
            sed -i '/appendLine("  udp: '\''udp'\''")/a\
             appendLine("mapdns:")\
-            appendLine("  address: 198.18.0.2")\
+            appendLine("  address: 1.1.1.1")\
             appendLine("  port: 53")\
             appendLine("  network: 240.0.0.0")\
             appendLine("  netmask: 240.0.0.0")\
             appendLine("  cache-size: 10000")' \
-            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/service/V2RayVpnService.kt
+            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/service/HevTun2SocksService.kt
       - name: add v2rayNG ndk version
         run: |
           sed -i $'10i\\\n    ndkVersion = "${{ env.use_ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
