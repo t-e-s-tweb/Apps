@@ -117,8 +117,8 @@ jobs:
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
             --channel=3 \
             --install "ndk;${{ inputs.ndk_version }}"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/ ${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/ ${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
+          echo "NDK_HOME=$ANDROID_HOME/ndk/${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
 
       - name: Install System Tools
         run: |
@@ -160,7 +160,7 @@ jobs:
       
       - name: add v2rayNG ndk version
         run: |
-          sed -i $'10i\\\n    ndkVersion = " ${{ inputs.ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+          sed -i $'10i\\\n    ndkVersion = "${{ inputs.ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
 
       - name: import apk sign config
         run: |
