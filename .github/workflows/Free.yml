@@ -80,7 +80,7 @@ jobs:
     - name: 📦 Pack for 📱Android
       run: |
         yarn pack:botGuardScript:android
-        yarn pack:android
+        yarn pack:android:dev
         
     - name: Comment out signing config
       run: |
