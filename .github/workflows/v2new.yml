@@ -93,10 +93,40 @@ jobs:
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        set -e  # Stop on error
+
+        echo "Getting Xray-core from main..."
         go get github.com/xtls/xray-core@main || true
+
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        echo "Fetching PR #5006..."
+        git fetch origin pull/5006/head:pr-5006
+
+        echo "Fetching PR #5011..."
+        git fetch origin pull/5011/head:pr-5011
+
+        echo "Merging PR #5006 into main..."
+        git merge --no-edit pr-5006
+        echo "Changes from PR #5006:"
+        git log HEAD~1..HEAD --stat
+
+        echo "Merging PR #5011 into main..."
+        git merge --no-edit pr-5011
+        echo "Changes from PR #5011:"
+        git log HEAD~1..HEAD --stat
+
+        echo "Initializing gomobile..."
         gomobile init
+
+        echo "Tidying go modules..."
         go mod tidy
+
+        echo "Binding for Android..."
         gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
+
+        
    #   env:
    #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
     - name: Save libv2ray
