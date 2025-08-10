@@ -95,9 +95,16 @@ jobs:
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
         set -e  # Stop on error
 
-        echo "Getting Xray-core from main..."
+        
+        echo "Getting Xray-core into module cache..."
         go get github.com/xtls/xray-core@main || true
 
+        # Find module cache path
+        XRAY_PATH=$(go list -f '{{ .Dir }}' -m github.com/xtls/xray-core)
+        echo "Xray-core module path: $XRAY_PATH"
+
+        
+        cd "$XRAY_PATH"
         git config --global user.name "github-actions[bot]"
         git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
@@ -117,6 +124,7 @@ jobs:
         echo "Changes from PR #5011:"
         git log HEAD~1..HEAD --stat
 
+        cd -
         echo "Initializing gomobile..."
         gomobile init
 
