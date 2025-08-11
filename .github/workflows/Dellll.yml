@@ -181,25 +181,13 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
 
-    - name: Edit v2ray_config.json
-      run: |
-          FILE="${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config.json"
-
-          # Replace proxy line with targetStrategy
-          sed -i 's/"tag": "proxy",/"tag": "proxy",\n    "targetStrategy": "UseIPv6v4",/g' "$FILE"
-
-          # Replace direct line with targetStrategy
-          sed -i 's/"tag": "direct"/"tag": "direct",\n    "targetStrategy": "UseIPv4"/g' "$FILE"
-
-          # Replace domainStrategy value
-          sed -i 's/"domainStrategy": "UseIP"/"domainStrategy": "UseIPv4"/g' "$FILE"
-          
+    
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease --build-cache
+        ./gradlew assembleRelease
     #  env:
     #    ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         
