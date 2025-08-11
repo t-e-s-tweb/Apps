@@ -180,6 +180,19 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+
+    - name: Edit v2ray_config.json
+      run: |
+          FILE="${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config.json"
+
+          # Insert after "tag": "proxy",
+          sed -i '/"tag": "proxy",/a\    "targetStrategy": "UseIPv6v4",' "$FILE"
+
+          # Insert before "tag": "direct"
+          sed -i '/"tag": "direct"/i\    "targetStrategy": "UseIPv4",' "$FILE"
+
+          # Replace domainStrategy value
+          sed -i 's/"domainStrategy": "UseIP"/"domainStrategy": "UseIPv4"/g' "$FILE"
           
     - name: Build APK
       run: |
