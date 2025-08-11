@@ -185,11 +185,11 @@ jobs:
       run: |
           FILE="${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config.json"
 
-          # Insert after "tag": "proxy",
-          sed -i '/"tag": "proxy",/a\    "targetStrategy": "UseIPv6v4",' "$FILE"
+          # Replace proxy line with targetStrategy
+          sed -i 's/"tag": "proxy",/"tag": "proxy",\n    "targetStrategy": "UseIPv6v4",/g' "$FILE"
 
-          # Insert before "tag": "direct"
-          sed -i '/"tag": "direct"/i\    "targetStrategy": "UseIPv4",' "$FILE"
+          # Replace direct line with targetStrategy
+          sed -i 's/"tag": "direct"/"tag": "direct",\n    "targetStrategy": "UseIPv4"/g' "$FILE"
 
           # Replace domainStrategy value
           sed -i 's/"domainStrategy": "UseIP"/"domainStrategy": "UseIPv4"/g' "$FILE"
