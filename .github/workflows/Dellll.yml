@@ -3,7 +3,7 @@ name: Build v2 strat
 on:
   workflow_dispatch:
     inputs:
-      merge_pr:
+      pr_count:
         description: 'Select PR to merge (0 = none, 1–4 = merge specific PR)'
         required: true
         default: '0'
