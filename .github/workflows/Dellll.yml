@@ -180,7 +180,10 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
-
+   
+    - name: Update VPN_MTU in AppConfig.kt
+      run: |
+       sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
     
     - name: Build APK
       run: |
