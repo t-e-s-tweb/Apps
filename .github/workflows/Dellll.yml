@@ -39,6 +39,10 @@ on:
         required: false
         default: '0'
 
+      merge_prs_v2rayng:
+        description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
+        required: false
+        default: '0'
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -51,6 +55,24 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
+ 
+    - name: Merge selected PRs into V2rayNG
+      if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_v2rayng }}"
+        for PR_NUM in "${PR_LIST[@]}"; do
+          echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
+          git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          echo "Merging PR #$PR_NUM..."
+          git merge --no-edit pr-$PR_NUM
+          echo "Changes from PR #$PR_NUM:"
+          git log HEAD~1..HEAD --stat
+        done
+        
     - name: Prepare build dir
       run: |
         mkdir ${{ github.workspace }}/build
