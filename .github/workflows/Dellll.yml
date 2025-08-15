@@ -137,7 +137,7 @@ jobs:
     - name: Setup Golang
       uses: actions/setup-go@v5
       with:
-        go-version: '1.24'
+        go-version: '1.25'
         cache: true
         cache-dependency-path: ${{ github.workspace }}/build/AndroidLibXrayLite/go.sum
     
@@ -214,7 +214,7 @@ jobs:
         gomobile init
 
         echo "Binding for Android..."
-        gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
+        GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
    #   env:
    #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
     - name: Save libv2ray
