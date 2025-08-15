@@ -3,6 +3,14 @@ name: Build v2 strat
 on:
   workflow_dispatch:
     inputs:
+      force_build:
+        description: "Force rebuild libv2ray even if cache exists?"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
       pr_count:
         description: 'Select PR to merge (0 = none, 1–4 = merge specific PR)'
         required: true
@@ -148,7 +156,7 @@ jobs:
         
 
     - name: Build libv2ray
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      if: inputs.force_build == 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
         set -e  # Stop on error
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
