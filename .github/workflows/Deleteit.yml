@@ -84,7 +84,14 @@ jobs:
     - name: Prepare build dir
       run: |
         mkdir ${{ github.workspace }}/build
-    
+        
+    - name: Prepare Go cache directories
+      run: |
+       mkdir -p ~/.cache/go-build
+       mkdir -p ~/go/pkg/mod
+       mkdir -p ~/.gomobile
+       mkdir -p ~/go/bin
+       
     - name: Fetch AndroidLibXrayLite
       run: |
         cd ${{ github.workspace }}/build
