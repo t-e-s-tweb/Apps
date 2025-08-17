@@ -155,8 +155,6 @@ jobs:
         go-version: '1.25'
         cache: false
         
-    - name: Cache Go build, modules, and gomobile
-        # Restore Go-related caches before build/init steps
     - name: Restore Go build, modules, gomobile, and Go tools cache
       uses: actions/cache/restore@v4
       with:
