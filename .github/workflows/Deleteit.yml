@@ -179,67 +179,84 @@ jobs:
     - name: Build libv2ray
       if: inputs.force_build == 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       run: |
-         set -e
-         cd ${{ github.workspace }}/build/AndroidLibXrayLite
+        set -e  # Stop on error
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
 
+        
+        go mod edit -replace=gvisor.dev/gvisor=gvisor.dev/gvisor@v0.0.0-20231020174304-b8a429915ff1
+        
 
-         go mod edit -replace=gvisor.dev/gvisor=gvisor.dev/gvisor@v0.0.0-20231020174304-b8a429915ff1
+        
+        go get -u
+        go get gvisor.dev/gvisor@go
+          
+        
+        go mod tidy -v
+          
+        echo "Preparing Go environment..."
+        go env -w GOPRIVATE=github.com/xtls/xray-core
+        go env -w GONOSUMDB=github.com/xtls/xray-core
 
-         go env -w GOPRIVATE=github.com/xtls/xray-core
-         go env -w GONOSUMDB=github.com/xtls/xray-core
+        echo "Finding Go module cache path..."
+        MODCACHE=$(go env GOMODCACHE)
+        echo "Module cache path: $MODCACHE"
 
- 
-         MODCACHE=$(go env GOMODCACHE)
-         XRAY_PATH="$MODCACHE/github.com/xtls/xray-core"
+        echo "Ensuring xray-core is a full git clone..."
+        XRAY_PATH="$MODCACHE/github.com/xtls/xray-core"
+        rm -rf "$XRAY_PATH"  # Remove any proxy-downloaded copy
+        git clone https://github.com/xtls/xray-core.git "$XRAY_PATH"
+        cd "$XRAY_PATH"
+        git checkout main
 
-         COUNT=${{ github.event.inputs.pr_count }}
-         USE_LOCAL=false
-         if [ "$COUNT" -ge 1 ] || [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
-          USE_LOCAL=true
-         fi
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
 
-         if [ "$USE_LOCAL" = true ]; then
-  
-         if [ ! -d "$XRAY_PATH" ]; then
-          git clone https://github.com/xtls/xray-core.git "$XRAY_PATH"
-         fi
-         cd "$XRAY_PATH"
-         git fetch origin main
-         git reset --hard origin/main
-         git config user.name "github-actions[bot]"
-         git config user.email "github-actions[bot]@users.noreply.github.com"
+        COUNT=${{ github.event.inputs.pr_count }}
 
-  
-         for i in $(seq 1 4); do
-         PR_VAR="pr$i"
-         PR_NUM=${{ github.event.inputs[$PR_VAR] }}
-         if [ "$COUNT" -ge "$i" ] && [ -n "$PR_NUM" ]; then
-           echo "Merging PR #$PR_NUM"
-           git fetch origin pull/$PR_NUM/head:pr$i
-           git merge --no-edit pr$i
-         fi
-         done
+        if [ "$COUNT" -ge 1 ] && [ -n "${{ github.event.inputs.pr1 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr1 }}"
+         git fetch origin pull/${{ github.event.inputs.pr1 }}/head:pr1
+         git merge --no-edit pr1
+        fi
+        if [ "$COUNT" -ge 2 ] && [ -n "${{ github.event.inputs.pr2 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr2 }}"
+         git fetch origin pull/${{ github.event.inputs.pr2 }}/head:pr2
+         git merge --no-edit pr2
+        fi
+        if [ "$COUNT" -ge 3 ] && [ -n "${{ github.event.inputs.pr3 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr3 }}"
+         git fetch origin pull/${{ github.event.inputs.pr3 }}/head:pr3
+         git merge --no-edit pr3
+        fi
+        if [ "$COUNT" -ge 4 ] && [ -n "${{ github.event.inputs.pr4 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr4 }}"
+         git fetch origin pull/${{ github.event.inputs.pr4 }}/head:pr4
+         git merge --no-edit pr4
+        fi
 
-         if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
-           REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
-           REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
-           BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
-           git remote add external https://github.com/$REPO.git || true
-           git fetch external $BRANCH
-           git merge --no-edit external/$BRANCH
-         fi
+        # Merge branch from another repo if requested
+        if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
+         REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
+         REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
+         BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
+         echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+         git remote add external https://github.com/$REPO.git
+         git fetch external $BRANCH
+         git merge --no-edit external/$BRANCH
+        fi        
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
 
-         cd ${{ github.workspace }}/build/AndroidLibXrayLite
-         go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
+        echo "Updating go.mod to use local xray-core..."
+        go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
+        go mod tidy
 
-         else
-         go get -u github.com/xtls/xray-core
-         fi
+        echo "Initializing gomobile..."
+        gomobile init
 
-         go mod tidy -v
-         gomobile init
-         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
-   
+        echo "Binding for Android..."
+        GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
+   #   env:
+   #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
    
   
 
