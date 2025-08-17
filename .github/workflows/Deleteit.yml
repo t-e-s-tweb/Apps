@@ -261,7 +261,7 @@ jobs:
           ~/.gomobile
           ~/go/bin
         key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
-      continue-on-error: true
+        continue-on-error: true
     
     
     
