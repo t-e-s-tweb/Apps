@@ -154,17 +154,23 @@ jobs:
       with:
         go-version: '1.25'
         cache: false
+        
     - name: Cache Go build, modules, and gomobile
-      uses: actions/cache@v4
+        # Restore Go-related caches before build/init steps
+    - name: Restore Go build, modules, gomobile, and Go tools cache
+      uses: actions/cache/restore@v4
       with:
         path: |
-         ~/.cache/go-build      # Go build cache
-         ~/go/pkg/mod           # Go module cache
-         ~/.gomobile            # gomobile init cache
-         ~/go/bin               # Go tools (gomobile etc.)
-        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('build/AndroidLibXrayLite/go.sum', 'build/AndroidLibXrayLite/**/*.go') }}
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
         restore-keys: |
-         ${{ runner.os }}-go-gomobile-
+          ${{ runner.os }}-go-gomobile-
+      # If cache miss, don't fail
+        fail-on-cache-miss: false
+
     
     - name: Install gomobile
       run: |
@@ -242,6 +248,23 @@ jobs:
         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
    #   env:
    #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+   
+  
+
+    # Save Go-related caches after build/init
+    - name: Save Go build, modules, gomobile, and Go tools cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
+      continue-on-error: true
+    
+    
+    
     - name: Save libv2ray
       if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
