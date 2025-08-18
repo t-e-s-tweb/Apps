@@ -1,0 +1,332 @@
+name: Build v2 strat DHR60
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Force rebuild libv2ray even if cache exists?"
+        required: true
+        default: "false"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      pr_count:
+        description: 'Select PR to merge (0 = none, 1–4 = merge specific PR)'
+        required: true
+        default: '0'
+        type: choice
+        options:
+          - '0'
+          - '1'
+          - '2'
+          - '3'
+          - '4'
+      pr1:
+        description: 'PR #1 to merge (if any)'
+        required: false
+        default: ''
+
+      pr2:
+        description: 'PR #2 to merge (if any)'
+        required: false
+        default: ''
+
+      pr3:
+        description: 'PR #3 to merge (if any)'
+        required: false
+        default: ''
+
+      pr4:
+        description: 'PR #4 to merge (if any)'
+        required: false
+        default: ''
+          
+      fetch_branch_from_other:
+        description: 'Enter "username/repo branch" to fetch & merge, or 0 for none'
+        required: false
+        default: '0'
+
+      merge_prs_v2rayng:
+        description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
+        required: false
+        default: '0'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        repository: DHR60/v2rayNG
+        ref: self_use_build
+        submodules: 'recursive'
+        fetch-depth: '0'
+ 
+    - name: Merge selected PRs into V2rayNG
+      if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_v2rayng }}"
+        for PR_NUM in "${PR_LIST[@]}"; do
+          echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
+          git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+          git merge -X theirs --no-edit pr-$PR_NUM || true
+          echo "Changes from PR #$PR_NUM:"
+          git log HEAD~1..HEAD --stat || true
+        done
+        
+    - name: Prepare build dir
+      run: |
+        mkdir ${{ github.workspace }}/build
+        
+    - name: Prepare Go cache directories
+      run: |
+       mkdir -p ~/.cache/go-build
+       mkdir -p ~/go/pkg/mod
+       mkdir -p ~/.gomobile
+       mkdir -p ~/go/bin
+       
+    - name: Fetch AndroidLibXrayLite
+      run: |
+        cd ${{ github.workspace }}/build
+        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
+        cd AndroidLibXrayLite
+        git submodule update --init
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        log-accepted-android-sdk-licenses: false
+        cmdline-tools-version: '12266719'
+        packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+
+    - name: Install NDK
+      run: |
+        echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
+          --channel=0 \
+          --install "ndk;28.2.13676358"
+        echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+        echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+        sed -i '10i\
+        \
+            ndkVersion = "28.2.13676358"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+ 
+    - name: Restore cached libtun2socks
+      id: cache-libtun2socks-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/libs
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+   
+    - name: Build libtun2socks
+      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      run: |
+        bash compile-tun2socks.sh
+
+    - name: Save libtun2socks
+      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/libs
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+   
+    - name: Copy libtun2socks
+      run: |
+        cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
+
+
+    
+   
+    - name: Restore cached libv2ray
+      id: cache-libv2ray-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite/
+        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+
+    - name: Setup Golang
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.25'
+        cache: false
+        
+    - name: Restore Go build, modules, gomobile, and Go tools cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
+        restore-keys: |
+          ${{ runner.os }}-go-gomobile-
+      
+      
+
+    
+    - name: Install gomobile
+      run: |
+        go install golang.org/x/mobile/cmd/gomobile@latest
+        export PATH=$PATH:~/go/bin
+        
+
+    - name: Build libv2ray
+      if: inputs.force_build == 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      run: |
+        set -e  # Stop on error
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          
+        echo "Preparing Go environment..."
+        go env -w GOPRIVATE=github.com/xtls/xray-core
+        go env -w GONOSUMDB=github.com/xtls/xray-core
+
+        echo "Finding Go module cache path..."
+        MODCACHE=$(go env GOMODCACHE)
+        echo "Module cache path: $MODCACHE"
+
+        echo "Ensuring xray-core is a full git clone..."
+        XRAY_PATH="$MODCACHE/github.com/xtls/xray-core"
+        rm -rf "$XRAY_PATH"  # Remove any proxy-downloaded copy
+        git clone https://github.com/xtls/xray-core.git "$XRAY_PATH"
+        cd "$XRAY_PATH"
+        git checkout main
+
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        COUNT=${{ github.event.inputs.pr_count }}
+
+        if [ "$COUNT" -ge 1 ] && [ -n "${{ github.event.inputs.pr1 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr1 }}"
+         git fetch origin pull/${{ github.event.inputs.pr1 }}/head:pr1
+         git merge --no-edit pr1
+        fi
+        if [ "$COUNT" -ge 2 ] && [ -n "${{ github.event.inputs.pr2 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr2 }}"
+         git fetch origin pull/${{ github.event.inputs.pr2 }}/head:pr2
+         git merge --no-edit pr2
+        fi
+        if [ "$COUNT" -ge 3 ] && [ -n "${{ github.event.inputs.pr3 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr3 }}"
+         git fetch origin pull/${{ github.event.inputs.pr3 }}/head:pr3
+         git merge --no-edit pr3
+        fi
+        if [ "$COUNT" -ge 4 ] && [ -n "${{ github.event.inputs.pr4 }}" ]; then
+         echo "Merging PR #${{ github.event.inputs.pr4 }}"
+         git fetch origin pull/${{ github.event.inputs.pr4 }}/head:pr4
+         git merge --no-edit pr4
+        fi
+
+        # Merge branch from another repo if requested
+        if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
+         REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
+         REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
+         BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
+         echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+         git remote add external https://github.com/$REPO.git
+         git fetch external $BRANCH
+         git merge --no-edit external/$BRANCH
+        fi        
+        cd ${{ github.workspace }}/build/AndroidLibXrayLite
+
+        echo "Updating go.mod to use local xray-core..."
+        go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
+        go mod tidy
+
+        echo "Initializing gomobile..."
+        gomobile init
+
+        echo "Binding for Android..."
+        GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
+   #   env:
+   #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+   
+  
+
+    # Save Go-related caches after build/init
+    - name: Save Go build, modules, gomobile, and Go tools cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
+        continue-on-error: true
+    
+    
+    
+    - name: Save libv2ray
+      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/build/AndroidLibXrayLite/
+        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+
+    - name: Copy libv2ray
+      run: |
+        cp -r ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar ${{ github.workspace }}/V2rayNG/app/libs/
+
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '21'
+   
+      
+    - name: Restore cached libhysteria2
+      id: cache-libhysteria2-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
+        
+    - name: Build libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      run: |
+        bash libhysteria2.sh
+
+    - name: Save libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
+
+    - name: Copy libhysteria2
+      run: |
+        cp -r ${{ github.workspace }}/hysteria/libs ${{ github.workspace }}/V2rayNG/app
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v4
+   
+    - name: Update VPN_MTU in AppConfig.kt
+      run: |
+       sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+    - name: Refactor package name
+      run: |
+        python3 refactor_package.py 
+    - name: Build APK
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        echo "sdk.dir=${ANDROID_HOME}" > local.properties
+        chmod 755 gradlew
+        ./gradlew assembleRelease
+    #  env:
+    #    ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+        
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@2.7.0
+      with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*.apk
+          tag: v2
+          overwrite: true
+          file_glob: true
