@@ -106,10 +106,10 @@ jobs:
         
     - name: Prepare Go cache directories
       run: |
-       mkdir -p ~/.cache/go-build
-       mkdir -p ~/go/pkg/mod
-       mkdir -p ~/.gomobile
-       mkdir -p ~/go/bin
+        mkdir -p ~/.cache/go-build
+        mkdir -p ~/go/pkg/mod
+        mkdir -p ~/.gomobile
+        mkdir -p ~/go/bin
        
     - name: Fetch AndroidLibXrayLite
       run: |
@@ -296,8 +296,7 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21'
-   
+        java-version: '21' 
       
     - name: Restore cached libhysteria2
       id: cache-libhysteria2-restore
