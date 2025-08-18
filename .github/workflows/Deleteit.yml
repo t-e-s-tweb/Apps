@@ -51,25 +51,6 @@ on:
         description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
         required: false
         default: '0'
-
-      source:
-        description: "Choose which repository/branch to build"
-        required: false
-        default: "original"
-        type: choice
-        options:
-          - original
-          - fork
-          - custom
-      custom_repo:
-        description: "Custom repository (e.g. username/v2rayNG)"
-        required: false
-        default: ""
-      custom_ref:
-        description: "Custom branch or tag"
-        required: false
-        default: ""
-        
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -78,8 +59,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
-        repository: ${{ github.event.inputs.source == 'fork' && 'DHR60/v2rayNG' || github.event.inputs.source == 'custom' && github.event.inputs.custom_repo || '2dust/v2rayNG' }}
-        ref: ${{ github.event.inputs.source == 'fork' && 'self_use_build' || github.event.inputs.source == 'custom' && github.event.inputs.custom_ref || 'master' }}
+        repository: 2dust/v2rayNG
+        ref: master
         submodules: 'recursive'
         fetch-depth: '0'
  
@@ -106,10 +87,10 @@ jobs:
         
     - name: Prepare Go cache directories
       run: |
-        mkdir -p ~/.cache/go-build
-        mkdir -p ~/go/pkg/mod
-        mkdir -p ~/.gomobile
-        mkdir -p ~/go/bin
+       mkdir -p ~/.cache/go-build
+       mkdir -p ~/go/pkg/mod
+       mkdir -p ~/.gomobile
+       mkdir -p ~/go/bin
        
     - name: Fetch AndroidLibXrayLite
       run: |
@@ -283,6 +264,7 @@ jobs:
     
     
     - name: Save libv2ray
+      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
@@ -296,7 +278,8 @@ jobs:
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
-        java-version: '21' 
+        java-version: '21'
+   
       
     - name: Restore cached libhysteria2
       id: cache-libhysteria2-restore
@@ -327,13 +310,7 @@ jobs:
     - name: Update VPN_MTU in AppConfig.kt
       run: |
        sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
-
-    - name: Refactor package name
-      if: ${{ github.event.inputs.source == 'fork' }}
-      run: |
-        cd ${{ github.workspace }}/V2rayNG
-        python3 refactor_package.py
-          
+    
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
