@@ -264,7 +264,6 @@ jobs:
     
     
     - name: Save libv2ray
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
