@@ -80,8 +80,8 @@ jobs:
       with:
         repository: ${{ github.event.inputs.source == 'fork' && 'DHR60/v2rayNG' || github.event.inputs.source == 'custom' && github.event.inputs.custom_repo || '2dust/v2rayNG' }}
         ref: ${{ github.event.inputs.source == 'fork' && 'self_use_build' || github.event.inputs.source == 'custom' && github.event.inputs.custom_ref || 'master' }}
-        submodules: recursive
-        fetch-depth: 0
+        submodules: 'recursive'
+        fetch-depth: '0'
  
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
