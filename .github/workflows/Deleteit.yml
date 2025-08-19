@@ -67,8 +67,10 @@ jobs:
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
         cd ${{ github.workspace }}/V2rayNG
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
         git remote add dh60 https://github.com/DHR60/V2rayNG.git
-        git fetch dh60 self_use_build
+        git fetch DHR60 self_use_build
         git cherry-pick 5e79a0bebfd8a2cdf2a23f54fdd8be7cfed2885d || true
         
     - name: Merge selected PRs into V2rayNG
