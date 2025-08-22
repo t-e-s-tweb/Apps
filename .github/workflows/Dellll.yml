@@ -344,7 +344,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease --configuration-cache --build-cache
+        ./gradlew assembleRelease --build-cache
 
 
 
