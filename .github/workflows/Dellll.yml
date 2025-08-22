@@ -191,7 +191,7 @@ jobs:
         
 
     - name: Build libv2ray
-      if: inputs.force_build == 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      if: inputs.force_build == 'true'
       run: |
         set -e  # Stop on error
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
