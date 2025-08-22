@@ -66,7 +66,8 @@ jobs:
     - name: Enable Gradle caching
       run: |
           echo "org.gradle.caching=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties     
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
         cd ${{ github.workspace }}/V2rayNG
