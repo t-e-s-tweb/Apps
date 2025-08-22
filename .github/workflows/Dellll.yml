@@ -63,7 +63,16 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
- 
+        
+    - name: Apply commit from DHR60/V2rayNG self_use_build
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git remote add DHR60 https://github.com/DHR60/V2rayNG.git
+        git fetch DHR60 self_use_build
+        git cherry-pick 5e79a0bebfd8a2cdf2a23f54fdd8be7cfed2885d || true
+        
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
@@ -84,7 +93,14 @@ jobs:
     - name: Prepare build dir
       run: |
         mkdir ${{ github.workspace }}/build
-    
+        
+    - name: Prepare Go cache directories
+      run: |
+       mkdir -p ~/.cache/go-build
+       mkdir -p ~/go/pkg/mod
+       mkdir -p ~/.gomobile
+       mkdir -p ~/go/bin
+       
     - name: Fetch AndroidLibXrayLite
       run: |
         cd ${{ github.workspace }}/build
@@ -140,14 +156,33 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        key: libv2ray-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          libv2ray-${{ runner.os }}-
+
 
     - name: Setup Golang
       uses: actions/setup-go@v5
       with:
         go-version: '1.25'
-        cache: true
-        cache-dependency-path: ${{ github.workspace }}/build/AndroidLibXrayLite/go.sum
+        cache: false
+        
+    - name: Restore Go build, modules, gomobile, and Go tools cache
+      id: cache-go-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
+        restore-keys: |
+          ${{ runner.os }}-go-gomobile-
+
+      
+      
+
     
     - name: Install gomobile
       run: |
@@ -160,7 +195,7 @@ jobs:
       run: |
         set -e  # Stop on error
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
-
+          
         echo "Preparing Go environment..."
         go env -w GOPRIVATE=github.com/xtls/xray-core
         go env -w GONOSUMDB=github.com/xtls/xray-core
@@ -225,12 +260,31 @@ jobs:
         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
    #   env:
    #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+   
+  
+
+    # Save Go-related caches after build/init
+    - name: Save Go build, modules, gomobile, and Go tools cache
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          ~/.cache/go-build
+          ~/go/pkg/mod
+          ~/.gomobile
+          ~/go/bin
+        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
+
+    
+    
+    
     - name: Save libv2ray
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      if: always()
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        key: libv2ray-${{ runner.os }}-${{ github.run_id }}
+
 
     - name: Copy libv2ray
       run: |
@@ -268,6 +322,20 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
+
+    - name: Restore Gradle build caches
+      id: gradle-build-cache-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+         ~/.gradle/caches/*/kotlin-dsl/
+         ~/.gradle/caches/*/scripts/
+         ~/.gradle/caches/transforms-*/
+         ~/.gradle/caches/jars-*/
+         ~/.gradle/caches/build-cache-*/
+        key: gradle-build-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+            gradle-build-${{ runner.os }}-
    
     - name: Update VPN_MTU in AppConfig.kt
       run: |
@@ -279,9 +347,48 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         ./gradlew assembleRelease
-    #  env:
-    #    ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-        
+
+    - name: Cleanup Gradle build caches
+      run: |
+        find ~/.gradle/caches/ -name "*.lock" -delete || true
+        rm -rf ~/.gradle/caches/*/scripts-remapped/ || true
+        rm -rf ~/.gradle/caches/journal-* || true 
+
+    - name: Save Gradle build caches
+      if: always()
+      uses: actions/cache/save@v4
+      with:
+          path: |
+            ~/.gradle/caches/*/kotlin-dsl/
+            ~/.gradle/caches/*/scripts/
+            ~/.gradle/caches/transforms-*/
+            ~/.gradle/caches/jars-*/
+            ~/.gradle/caches/build-cache-*/
+          key: gradle-build-${{ runner.os }}-${{ github.run_id }}
+
+    - name: Prune old Gradle build caches (keep 3)
+      uses: actions/github-script@v7
+      with:
+          script: |
+            const prefix = "gradle-build-${{ runner.os }}-";
+            const { owner, repo } = context.repo;
+
+            const caches = await github.rest.actions.getActionsCacheList({
+              owner, repo, per_page: 100,
+            });
+
+            const gradleCaches = caches.data.actions_caches
+              .filter(c => c.key.startsWith(prefix))
+              .sort((a, b) => new Date(b.last_accessed_at) - new Date(a.last_accessed_at));
+
+            console.log(`Found ${gradleCaches.length} rolling caches`);
+
+            for (let i = 3; i < gradleCaches.length; i++) {
+              console.log(`Deleting old cache: ${gradleCaches[i].key}`);
+              await github.rest.actions.deleteActionsCacheById({
+                owner, repo, cache_id: gradleCaches[i].id,
+              });
+            }       
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
