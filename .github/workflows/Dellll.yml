@@ -322,21 +322,71 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
-
-    - name: Restore Gradle build caches
-      id: gradle-build-cache-restore
-      uses: actions/cache/restore@v4
       with:
-        path: |
-         ~/.gradle/caches/*/kotlin-dsl/
-         ~/.gradle/caches/*/scripts/
-         ~/.gradle/caches/transforms-*/
-         ~/.gradle/caches/jars-*/
-         ~/.gradle/caches/build-cache-*/
-        key: gradle-build-${{ runner.os }}-${{ github.run_id }}
+        cache-disabled: true
+      
+    - name: Gradle Dependencies (modules-2)
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle/caches/modules-2
+        key: gradle-deps-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle.properties') }}
         restore-keys: |
-            gradle-build-${{ runner.os }}-
-   
+            gradle-deps-${{ runner.os }}-
+        retention-days: 30
+
+            
+    - name: Gradle Wrapper
+      uses: actions/cache@v4
+      with:
+       path: ~/.gradle/wrapper
+       key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+       retention-days: 30        
+
+    - name: Gradle API Jars
+      uses: actions/cache@v4
+      with:
+          path: ~/.gradle/caches/*/generated-gradle-jars
+          key: gradle-api-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
+          retention-days: 30
+          
+    - name: Gradle Kotlin DSL + Scripts
+      uses: actions/cache@v4
+      with:
+          path: |
+            ~/.gradle/caches/*/kotlin-dsl
+            ~/.gradle/caches/*/scripts
+          key: gradle-scripts-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-scripts-${{ runner.os }}-
+            gradle-scripts-${{ runner.os }}-${{ github.run_number }}
+          retention-days: 7
+    - name: Gradle Transforms
+      uses: actions/cache@v4
+      with:
+          path: ~/.gradle/caches/transforms-*
+          key: gradle-transforms-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-transforms-${{ runner.os }}-
+            gradle-transforms-${{ runner.os }}-${{ github.run_number }}
+          retention-days: 7
+    - name: Gradle Jars (instrumented)
+      uses: actions/cache@v4
+      with:
+          path: ~/.gradle/caches/jars-*
+          key: gradle-jars-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-jars-${{ runner.os }}-
+            gradle-jars-${{ runner.os }}-${{ github.run_number }}
+          retention-days: 7
+    - name: Gradle Build Cache
+      uses: actions/cache@v4
+      with:
+          path: ~/.gradle/caches/build-cache-*
+          key: gradle-buildcache-${{ runner.os }}-${{ github.run_id }}
+          restore-keys: |
+            gradle-buildcache-${{ runner.os }}-
+            gradle-buildcache-${{ runner.os }}-${{ github.run_number }}
+          retention-days: 7
     - name: Update VPN_MTU in AppConfig.kt
       run: |
        sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
@@ -348,47 +398,11 @@ jobs:
         chmod 755 gradlew
         ./gradlew assembleRelease
 
-    - name: Cleanup Gradle build caches
-      run: |
-        find ~/.gradle/caches/ -name "*.lock" -delete || true
-        rm -rf ~/.gradle/caches/*/scripts-remapped/ || true
-        rm -rf ~/.gradle/caches/journal-* || true 
 
-    - name: Save Gradle build caches
-      if: always()
-      uses: actions/cache/save@v4
-      with:
-          path: |
-            ~/.gradle/caches/*/kotlin-dsl/
-            ~/.gradle/caches/*/scripts/
-            ~/.gradle/caches/transforms-*/
-            ~/.gradle/caches/jars-*/
-            ~/.gradle/caches/build-cache-*/
-          key: gradle-build-${{ runner.os }}-${{ github.run_id }}
 
-    - name: Prune old Gradle build caches (keep 3)
-      uses: actions/github-script@v7
-      with:
-          script: |
-            const prefix = "gradle-build-${{ runner.os }}-";
-            const { owner, repo } = context.repo;
 
-            const caches = await github.rest.actions.getActionsCacheList({
-              owner, repo, per_page: 100,
-            });
 
-            const gradleCaches = caches.data.actions_caches
-              .filter(c => c.key.startsWith(prefix))
-              .sort((a, b) => new Date(b.last_accessed_at) - new Date(a.last_accessed_at));
 
-            console.log(`Found ${gradleCaches.length} rolling caches`);
-
-            for (let i = 3; i < gradleCaches.length; i++) {
-              console.log(`Deleting old cache: ${gradleCaches[i].key}`);
-              await github.rest.actions.deleteActionsCacheById({
-                owner, repo, cache_id: gradleCaches[i].id,
-              });
-            }       
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
