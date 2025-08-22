@@ -325,68 +325,16 @@ jobs:
       with:
         cache-disabled: true
       
-    - name: Gradle Dependencies (modules-2)
+    - name: Cache Gradle packages
+      id: gradle-cache
       uses: actions/cache@v4
       with:
-        path: ~/.gradle/caches/modules-2
-        key: gradle-deps-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle.properties') }}
-        restore-keys: |
-            gradle-deps-${{ runner.os }}-
-        retention-days: 30
-
-            
-    - name: Gradle Wrapper
-      uses: actions/cache@v4
-      with:
-       path: ~/.gradle/wrapper
-       key: gradle-wrapper-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-       retention-days: 30        
-
-    - name: Gradle API Jars
-      uses: actions/cache@v4
-      with:
-          path: ~/.gradle/caches/*/generated-gradle-jars
-          key: gradle-api-${{ runner.os }}-${{ hashFiles('**/gradle/wrapper/gradle-wrapper.properties') }}
-          retention-days: 30
-          
-    - name: Gradle Kotlin DSL + Scripts
-      uses: actions/cache@v4
-      with:
-          path: |
-            ~/.gradle/caches/*/kotlin-dsl
-            ~/.gradle/caches/*/scripts
-          key: gradle-scripts-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            gradle-scripts-${{ runner.os }}-
-            gradle-scripts-${{ runner.os }}-${{ github.run_number }}
-          retention-days: 7
-    - name: Gradle Transforms
-      uses: actions/cache@v4
-      with:
-          path: ~/.gradle/caches/transforms-*
-          key: gradle-transforms-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            gradle-transforms-${{ runner.os }}-
-            gradle-transforms-${{ runner.os }}-${{ github.run_number }}
-          retention-days: 7
-    - name: Gradle Jars (instrumented)
-      uses: actions/cache@v4
-      with:
-          path: ~/.gradle/caches/jars-*
-          key: gradle-jars-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            gradle-jars-${{ runner.os }}-
-            gradle-jars-${{ runner.os }}-${{ github.run_number }}
-          retention-days: 7
-    - name: Gradle Build Cache
-      uses: actions/cache@v4
-      with:
-          path: ~/.gradle/caches/build-cache-*
-          key: gradle-buildcache-${{ runner.os }}-${{ github.run_id }}
-          restore-keys: |
-            gradle-buildcache-${{ runner.os }}-
-            gradle-buildcache-${{ runner.os }}-${{ github.run_number }}
-          retention-days: 7
+       path: |
+        ~/.gradle/caches
+        ~/.gradle/wrapper
+       key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+       restore-keys: |
+        gradle-${{ runner.os }}-
     - name: Update VPN_MTU in AppConfig.kt
       run: |
        sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
