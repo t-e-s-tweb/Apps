@@ -106,6 +106,7 @@ jobs:
        mkdir -p ~/go/bin
        
     - name: Fetch AndroidLibXrayLite
+      if: inputs.force_build == 'true'
       run: |
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
@@ -172,6 +173,7 @@ jobs:
         cache: false
         
     - name: Restore Go build, modules, gomobile, and Go tools cache
+      if: inputs.force_build == 'true'
       id: cache-go-restore
       uses: actions/cache/restore@v4
       with:
@@ -189,6 +191,7 @@ jobs:
 
     
     - name: Install gomobile
+      if: inputs.force_build == 'true'
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
         export PATH=$PATH:~/go/bin
@@ -269,7 +272,7 @@ jobs:
 
     # Save Go-related caches after build/init
     - name: Save Go build, modules, gomobile, and Go tools cache
-      if: always()
+      if: inputs.force_build == 'true'
       uses: actions/cache/save@v4
       with:
         path: |
@@ -283,7 +286,7 @@ jobs:
     
     
     - name: Save libv2ray
-      if: always()
+      if: inputs.force_build == 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
