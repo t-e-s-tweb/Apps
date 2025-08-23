@@ -328,7 +328,7 @@ jobs:
       uses: gradle/actions/setup-gradle@v4
       with:
         cache-disabled: false
-      
+        cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     
     - name: Update VPN_MTU in AppConfig.kt
       run: |
