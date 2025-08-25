@@ -260,9 +260,13 @@ jobs:
         echo "Updating go.mod to use local xray-core..."
         go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
         go mod tidy
+        echo "Cleaning Go build and module caches..."
+        go clean -cache -modcache -i -r
 
         echo "Initializing gomobile..."
-        gomobile init
+        gomobile init -v
+
+       
 
         echo "Binding for Android..."
         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
