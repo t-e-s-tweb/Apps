@@ -68,6 +68,7 @@ jobs:
       run: |
           echo "org.gradle.caching=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
           echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "org.gradle.configureondemand=true" >> /home/runner/work/Apps/Apps/V2rayNG/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
@@ -78,9 +79,9 @@ jobs:
         echo "Pref dnshost"
         git fetch DHR60 self_use_build
         git cherry-pick 5e79a0bebfd8a2cdf2a23f54fdd8be7cfed2885d || true
-        echo "Force Close core"
-        git fetch DHR60 build
-        git cherry-pick bb4ba8c6024576bce418811b7e58799312c5e420 || true
+      #  echo "Force Close core"
+      #  git fetch DHR60 build
+      #  git cherry-pick bb4ba8c6024576bce418811b7e58799312c5e420 || true
 
         
     - name: Merge selected PRs into V2rayNG
