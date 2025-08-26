@@ -76,9 +76,12 @@ jobs:
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
+        echo "Pref dnshost"
         git fetch DHR60 self_use_build
         git cherry-pick 5e79a0bebfd8a2cdf2a23f54fdd8be7cfed2885d || true
-        
+        echo "Force Close core"
+        git fetch DHR60 build
+        git cherry-pick bb4ba8c6024576bce418811b7e58799312c5e420 || true
     - name: Apply commit from DHR60/V2rayNG build
       run: |
         cd ${{ github.workspace }}/V2rayNG
