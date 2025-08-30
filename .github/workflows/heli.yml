@@ -28,35 +28,43 @@ jobs:
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
       
-      - name: Copy changed files from selected PRs into Heli
+      - name: Copy only changed files from selected PRs into Heli
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
-          cd ${{ github.workspace }}/
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+         cd ${{ github.workspace }}/
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
-          for PR_NUM in "${PR_LIST[@]}"; do
-            echo "Fetching PR #$PR_NUM..."
-            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
+         for PR_NUM in "${PR_LIST[@]}"; do
+           echo "Fetching PR #$PR_NUM..."
+           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+           git fetch origin main
 
-            echo "Getting changed files from PR #$PR_NUM..."
-            CHANGED_FILES=$(git diff --name-only origin/main pr-$PR_NUM)
+           BASE=$(git merge-base pr-$PR_NUM origin/main)
+           echo "Base commit for PR #$PR_NUM is $BASE"
 
-            if [ -z "$CHANGED_FILES" ]; then
-              echo "No changes detected in PR #$PR_NUM"
-              continue
-            fi
+           CHANGED_FILES=$(git diff --name-only $BASE pr-$PR_NUM)
 
-            echo "Checking out changed files from PR #$PR_NUM..."
-            git checkout pr-$PR_NUM -- $CHANGED_FILES
+           if [ -z "$CHANGED_FILES" ]; then
+             echo "No changes detected in PR #$PR_NUM"
+             continue
+           fi
 
-            echo "Committing changes from PR #$PR_NUM..."
-            git commit -am "Apply changed files from PR #$PR_NUM"
+           echo "Checking out changed files from PR #$PR_NUM..."
+           for FILE in $CHANGED_FILES; do
+             mkdir -p $(dirname "$FILE")
+             git checkout pr-$PR_NUM -- "$FILE"
+           done
+
+           git add $CHANGED_FILES
+           git commit -m "Apply changed files from PR #$PR_NUM"
+
+           echo "Files applied from PR #$PR_NUM:"
+           echo "$CHANGED_FILES"
+         done      
+            
   
-            echo "Files applied from PR #$PR_NUM:"
-            echo "$CHANGED_FILES"
-          done
            
           
         
