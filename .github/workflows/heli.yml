@@ -20,6 +20,8 @@ jobs:
           repository: Helium314/HeliBoard
           # Checkout the branch being built, not always main
           ref: main
+          submodules: 'recursive'
+          fetch-depth: '0'
       - name: Enable Gradle caching
         run: |
           echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
@@ -39,7 +41,7 @@ jobs:
          for PR_NUM in "${PR_LIST[@]}"; do
            echo "Fetching PR #$PR_NUM..."
            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
-           git fetch origin main
+           git fetch origin main --unshallow || git fetch origin main
 
            BASE=$(git merge-base pr-$PR_NUM origin/main)
            echo "Base commit for PR #$PR_NUM is $BASE"
