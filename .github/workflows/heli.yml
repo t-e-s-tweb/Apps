@@ -21,10 +21,10 @@ jobs:
           ref: main
       - name: Enable Gradle caching
         run: |
-          echo "org.gradle.caching=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
-          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
-          echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
-          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/HeliBoard/gradle.properties
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
       - name: Set up JDK
         uses: actions/setup-java@v4
