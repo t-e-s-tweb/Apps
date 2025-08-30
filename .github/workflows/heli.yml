@@ -28,7 +28,7 @@ jobs:
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
 
-      - name: Merge selected PRs into Heli
+      - name: Cherry-pick selected PRs into Heli
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
           cd ${{ github.workspace }}/
@@ -39,10 +39,15 @@ jobs:
           for PR_NUM in "${PR_LIST[@]}"; do
             echo "Fetching PR #$PR_NUM from Heliboard..."
             git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
-            echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
-            git merge -X theirs --no-edit --allow-unrelated-histories pr-$PR_NUM || true
+
+            echo "Cherry-picking commits from PR #$PR_NUM with auto-resolve (theirs)..."
+            PR_COMMITS=$(git rev-list --reverse pr-$PR_NUM)
+            if [ -n "$PR_COMMITS" ]; then
+              git cherry-pick -X theirs --allow-empty --keep-redundant-commits $PR_COMMITS || true
+            fi
+
             echo "Changes from PR #$PR_NUM:"
-            git log HEAD~1..HEAD --stat || true
+            git log -n $(echo "$PR_COMMITS" | wc -l) --oneline --stat || true
           done
         
       - name: Set up JDK
