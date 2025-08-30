@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       merge_prs_heli:
-      description: 'Comma-separated PR numbers to merge into heli app (0 = none)'
-      required: false
-      default: '0'
+        description: 'Comma-separated PR numbers to merge into heli app (0 = none)'
+        required: false
+        default: '0'
 
 
 jobs:
