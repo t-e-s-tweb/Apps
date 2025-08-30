@@ -2,6 +2,11 @@ name: Heliboard
 
 on:
   workflow_dispatch:
+   inputs:
+        merge_prs_heli:
+        description: 'Comma-separated PR numbers to merge into heli app (0 = none)'
+        required: false
+        default: '0'
   push:
     branches: [ new ]
   pull_request:
@@ -26,6 +31,24 @@ jobs:
           echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
+
+      - name: Merge selected PRs into V2rayNG
+        if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
+        run: |
+         cd ${{ github.workspace }}
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
+
+         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
+         for PR_NUM in "${PR_LIST[@]}"; do
+          echo "Fetching PR #$PR_NUM from Heliboard..."
+          git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+          git merge -X theirs --no-edit pr-$PR_NUM || true
+          echo "Changes from PR #$PR_NUM:"
+          git log HEAD~1..HEAD --stat || true
+         done
+        
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
