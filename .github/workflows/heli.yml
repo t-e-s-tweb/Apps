@@ -27,7 +27,8 @@ jobs:
           echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
-      - name: Apply selected PRs into Heli (diff only)
+      
+      - name: Copy changed files from selected PRs into Heli
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
           cd ${{ github.workspace }}/
@@ -36,25 +37,25 @@ jobs:
 
           IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
           for PR_NUM in "${PR_LIST[@]}"; do
-            echo "Fetching PR #$PR_NUM from Heliboard..."
+            echo "Fetching PR #$PR_NUM..."
             git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
-            git fetch origin main
 
-            echo "Finding base of PR #$PR_NUM..."
-            BASE_COMMIT=$(git merge-base origin/main pr-$PR_NUM || echo "")
-            if [ -z "$BASE_COMMIT" ]; then
-              echo "No common base found, using empty tree."
-              BASE_COMMIT=$(git hash-object -t tree /dev/null)
+            echo "Getting changed files from PR #$PR_NUM..."
+            CHANGED_FILES=$(git diff --name-only origin/main pr-$PR_NUM)
+
+            if [ -z "$CHANGED_FILES" ]; then
+              echo "No changes detected in PR #$PR_NUM"
+              continue
             fi
 
-            echo "Applying only the changes introduced in PR #$PR_NUM..."
-            git diff $BASE_COMMIT..pr-$PR_NUM | git apply --index || true
+            echo "Checking out changed files from PR #$PR_NUM..."
+            git checkout pr-$PR_NUM -- $CHANGED_FILES
 
             echo "Committing changes from PR #$PR_NUM..."
-            git commit -m "Apply changes from PR #$PR_NUM" || true
-
-            echo "Changes from PR #$PR_NUM:"
-            git show --stat HEAD || true
+            git commit -am "Apply changed files from PR #$PR_NUM"
+  
+            echo "Files applied from PR #$PR_NUM:"
+            echo "$CHANGED_FILES"
           done
            
           
