@@ -11,13 +11,20 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
-
+    env:
+      ABI_FILTERS: arm64-v8a
     steps:
       - uses: actions/checkout@v4
         with:
           repository: Helium314/HeliBoard
           # Checkout the branch being built, not always main
           ref: main
+      - name: Enable Gradle caching
+        run: |
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
+          echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/HeliBoard/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/HeliBoard/gradle.properties
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -30,6 +37,9 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
          cache-disabled: false
+         cache-overwrite-existing: true
+         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
         
@@ -37,7 +47,7 @@ jobs:
     #    run: sed -i "s/abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'/abiFilters 'arm64-v8a'/" app/build.gradle
         
       - name: Build with Gradle
-        run: ./gradlew assembleRelease --build-cache
+        run: ./gradlew assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
