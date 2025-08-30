@@ -30,28 +30,33 @@ jobs:
       - name: Apply selected PRs into Heli (diff only)
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
-         cd ${{ github.workspace }}/
-         git config user.name "github-actions[bot]"
-         git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ${{ github.workspace }}/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
-         for PR_NUM in "${PR_LIST[@]}"; do
-           echo "Fetching PR #$PR_NUM from Heliboard..."
-           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
+          for PR_NUM in "${PR_LIST[@]}"; do
+            echo "Fetching PR #$PR_NUM from Heliboard..."
+            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+            git fetch origin main
 
-           echo "Finding base of PR #$PR_NUM..."
-           BASE_COMMIT=$(git merge-base origin/main pr-$PR_NUM)
-   
-           echo "Applying only the changes introduced in PR #$PR_NUM..."
-           git diff $BASE_COMMIT..pr-$PR_NUM | git apply -3 --index || true
+            echo "Finding base of PR #$PR_NUM..."
+            BASE_COMMIT=$(git merge-base origin/main pr-$PR_NUM || echo "")
+            if [ -z "$BASE_COMMIT" ]; then
+              echo "No common base found, using empty tree."
+              BASE_COMMIT=$(git hash-object -t tree /dev/null)
+            fi
 
-           echo "Committing changes from PR #$PR_NUM..."
-           git commit -m "Apply changes from PR #$PR_NUM" || true
+            echo "Applying only the changes introduced in PR #$PR_NUM..."
+            git diff $BASE_COMMIT..pr-$PR_NUM | git apply -3 --index || true
 
-           echo "Changes from PR #$PR_NUM:"
-           git show --stat HEAD || true
-         done
-      
+            echo "Committing changes from PR #$PR_NUM..."
+            git commit -m "Apply changes from PR #$PR_NUM" || true
+
+            echo "Changes from PR #$PR_NUM:"
+            git show --stat HEAD || true
+          done
+           
           
         
       - name: Set up JDK
