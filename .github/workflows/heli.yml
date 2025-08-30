@@ -48,7 +48,7 @@ jobs:
             fi
 
             echo "Applying only the changes introduced in PR #$PR_NUM..."
-            git diff $BASE_COMMIT..pr-$PR_NUM | git apply -3 --index || true
+            git diff $BASE_COMMIT..pr-$PR_NUM | git apply --index || true
 
             echo "Committing changes from PR #$PR_NUM..."
             git commit -m "Apply changes from PR #$PR_NUM" || true
