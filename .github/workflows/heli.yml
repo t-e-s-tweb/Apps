@@ -27,28 +27,32 @@ jobs:
           echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
 
-
-      - name: Cherry-pick selected PRs into Heli
+      - name: Apply selected PRs into Heli (diff only)
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
-          cd ${{ github.workspace }}/
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+         cd ${{ github.workspace }}/
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
-          for PR_NUM in "${PR_LIST[@]}"; do
-            echo "Fetching PR #$PR_NUM from Heliboard..."
-            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
+         for PR_NUM in "${PR_LIST[@]}"; do
+           echo "Fetching PR #$PR_NUM from Heliboard..."
+           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
 
-            echo "Cherry-picking commits from PR #$PR_NUM with auto-resolve (theirs)..."
-            PR_COMMITS=$(git rev-list --reverse pr-$PR_NUM)
-            if [ -n "$PR_COMMITS" ]; then
-              git cherry-pick -X theirs --allow-empty --keep-redundant-commits $PR_COMMITS || true
-            fi
+           echo "Finding base of PR #$PR_NUM..."
+           BASE_COMMIT=$(git merge-base origin/main pr-$PR_NUM)
+   
+           echo "Applying only the changes introduced in PR #$PR_NUM..."
+           git diff $BASE_COMMIT..pr-$PR_NUM | git apply -3 --index || true
 
-            echo "Changes from PR #$PR_NUM:"
-            git log -n $(echo "$PR_COMMITS" | wc -l) --oneline --stat || true
-          done
+           echo "Committing changes from PR #$PR_NUM..."
+           git commit -m "Apply changes from PR #$PR_NUM" || true
+
+           echo "Changes from PR #$PR_NUM:"
+           git show --stat HEAD || true
+         done
+      
+          
         
       - name: Set up JDK
         uses: actions/setup-java@v4
