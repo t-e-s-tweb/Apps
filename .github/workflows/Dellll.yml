@@ -78,10 +78,9 @@ jobs:
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
         echo "Pref dnshost"
         git fetch DHR60 self_use_build
-        git cherry-pick 0feff0c3e07f43ceb6b339b95a0c8bc2b3d84de5 || true
-      #  echo "Force Close core"
-      #  git fetch DHR60 build
-      #  git cherry-pick bb4ba8c6024576bce418811b7e58799312c5e420 || true
+        git cherry-pick d052e940ddff825e4df06dd9463e912cc699a5aa || true
+        echo "Force Close core"
+        git cherry-pick e68ea2d27c4a66fb97cc2533d9d90beb8a0320bf || true
 
         
     - name: Merge selected PRs into V2rayNG
