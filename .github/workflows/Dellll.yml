@@ -349,7 +349,7 @@ jobs:
       run: |
        sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
        sed -i -E 's/(address = "fakedns"),/\1/; s/domains = [^)]*//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-       grep -n "domains =" ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+  
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
