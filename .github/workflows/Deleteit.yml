@@ -1,4 +1,4 @@
-name: Build v2 strat
+name: Build v2 dhr60opti
 
 on:
   workflow_dispatch:
@@ -54,7 +54,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    env:
+      ABI_FILTERS: arm64-v8a
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -63,15 +64,24 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
-        
+    - name: Enable Gradle caching
+      run: |
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "org.gradle.configureondemand=true" >> /home/runner/work/Apps/Apps/V2rayNG/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
+        echo "Pref dnshost"
         git fetch DHR60 self_use_build
-        git cherry-pick 5e79a0bebfd8a2cdf2a23f54fdd8be7cfed2885d || true
+        git cherry-pick 7965db1cc374efe24c85d2da04997ac87e8c2e97 || true
+        echo "Force Close core"
+        git cherry-pick 454f6d6ff6f285f40f9005cf6bfbe5b79f2ecbe0 || true
+
         
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
@@ -102,6 +112,7 @@ jobs:
        mkdir -p ~/go/bin
        
     - name: Fetch AndroidLibXrayLite
+      if: inputs.force_build == 'true'
       run: |
         cd ${{ github.workspace }}/build
         git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
@@ -135,6 +146,7 @@ jobs:
     - name: Build libtun2socks
       if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
+        curl -o compile-tun2socks.sh https://raw.githubusercontent.com/DHR60/v2rayNG/refs/heads/self_use_build/compile-tun2socks.sh && chmod +x compile-tun2socks.sh
         bash compile-tun2socks.sh
 
     - name: Save libtun2socks
@@ -156,7 +168,10 @@ jobs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        key: libv2ray-${{ runner.os }}-${{ github.run_id }}
+        restore-keys: |
+          libv2ray-${{ runner.os }}-
+
 
     - name: Setup Golang
       uses: actions/setup-go@v5
@@ -165,6 +180,8 @@ jobs:
         cache: false
         
     - name: Restore Go build, modules, gomobile, and Go tools cache
+      if: inputs.force_build == 'true'
+      id: cache-go-restore
       uses: actions/cache/restore@v4
       with:
         path: |
@@ -172,21 +189,23 @@ jobs:
           ~/go/pkg/mod
           ~/.gomobile
           ~/go/bin
-        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
+        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
         restore-keys: |
           ${{ runner.os }}-go-gomobile-
+
       
       
 
     
     - name: Install gomobile
+      if: inputs.force_build == 'true'
       run: |
         go install golang.org/x/mobile/cmd/gomobile@latest
         export PATH=$PATH:~/go/bin
         
 
     - name: Build libv2ray
-      if: inputs.force_build == 'true' || steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      if: inputs.force_build == 'true'
       run: |
         set -e  # Stop on error
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
@@ -246,10 +265,15 @@ jobs:
 
         echo "Updating go.mod to use local xray-core..."
         go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
+        go mod edit -replace=gvisor.dev/gvisor=gvisor.dev/gvisor@v0.0.0-20250606001031-fa4c4dd86b43
+        
         go mod tidy
+       
 
         echo "Initializing gomobile..."
-        gomobile init
+        gomobile init -v
+
+       
 
         echo "Binding for Android..."
         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
@@ -260,6 +284,7 @@ jobs:
 
     # Save Go-related caches after build/init
     - name: Save Go build, modules, gomobile, and Go tools cache
+      if: inputs.force_build == 'true'
       uses: actions/cache/save@v4
       with:
         path: |
@@ -267,17 +292,18 @@ jobs:
           ~/go/pkg/mod
           ~/.gomobile
           ~/go/bin
-        key: ${{ runner.os }}-go-gomobile-${{ hashFiles('**/go.sum', '**/*.go') }}
-        continue-on-error: true
+        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
+
     
     
     
     - name: Save libv2ray
-      if: steps.cache-libv2ray-restore.outputs.cache-hit != 'true'
+      if: inputs.force_build == 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/build/AndroidLibXrayLite/
-        key: libv2ray-${{ runner.os }}-${{ hashFiles('/build/AndroidLibXrayLite/.git/refs/heads/main') }}
+        key: libv2ray-${{ runner.os }}-${{ github.run_id }}
+
 
     - name: Copy libv2ray
       run: |
@@ -315,20 +341,32 @@ jobs:
 
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
-   
+      with:
+        cache-disabled: false
+        cache-overwrite-existing: true
+        cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+    
     - name: Update VPN_MTU in AppConfig.kt
       run: |
        sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
-    
+       sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+    - name: Refactor package name
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        curl -o refactor_package.py https://raw.githubusercontent.com/DHR60/v2rayNG/refs/heads/self_use_build/refactor_package.py
+        python3 refactor_package.py
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease
-    #  env:
-    #    ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
-        
+        ./gradlew assemblePlaystoreRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+
+
+
+
+
+
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
