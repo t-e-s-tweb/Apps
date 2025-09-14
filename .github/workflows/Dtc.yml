@@ -32,7 +32,7 @@ on:
         required: false
         default: '0'
       merge_prs_xray:
-        description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
+        description: 'Comma-separated PR numbers to merge into Xraycore (0 = none)'
         required: false
         default: '0'
       fetch_branch_from_other:
