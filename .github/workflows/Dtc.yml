@@ -54,14 +54,8 @@ on:
         required: true
         default: "HEAD~0"
         type: string
-      build_xray_elf:
-        description: "build xray"
-        default: true
-        type: boolean
-      release_archives:
-        description: "enable release archives"
-        default: true
-        type: boolean
+
+
       merge_prs_v2rayng:
         description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
         required: false
@@ -258,32 +252,7 @@ jobs:
           cd ${{ github.workspace }}/build/v2rayNG
           echo "ng_short_commit_id=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
 
-      - name: Build xray elf
-        if: ${{ inputs.build_xray_elf }}
-        run: |
-          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
-          echo 'Building Xray for windows(amd64)'
-          mkdir -p build_assets/Xray-windows-64
-          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o build_assets/Xray-windows-64/xray.exe -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -H windowsgui -s -w -buildid=" -v ./main
-          echo 'Building Xray for linux(amd64)'
-          mkdir -p build_assets/Xray-linux-64
-          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build_assets/Xray-linux-64/xray -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -s -w -buildid=" -v ./main
-          echo 'Building Xray for linux(arm64)'
-          mkdir -p build_assets/Xray-linux-arm64-v8a
-          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o build_assets/Xray-linux-arm64-v8a/xray -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -s -w -buildid=" -v ./main
-          tree ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
- 
-      - name: zip xray elf
-        if: ${{ inputs.build_xray_elf }}
-        run: |
-          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
-          for bin_dir in */; do
-            cd ${bin_dir}
-            touch -mt $(date +%Y01010000) *
-            zip -9vr ../${bin_dir%/}.zip .
-            cd ../
-          done
-          tree ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
+
 
       - name: Build libv2ray aar
         run: |
@@ -340,22 +309,8 @@ jobs:
           tree ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
           ./gradlew assemblePlaystoreRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
-      - name: Upload xray elf
-        if: ${{ inputs.build_xray_elf }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: bin-${{ env.x_short_version }}
-          compression-level: 9
-          path: |
-            ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets/*.zip
 
-      - name: Upload aar
-        uses: actions/upload-artifact@v4
-        with:
-          name: aar-${{ env.x_short_version }}
-          compression-level: 9
-          path: |
-            ${{ github.workspace }}/build/AndroidLibXrayLite/*.aar
+
 
       - name: Upload arm dev apk
         uses: actions/upload-artifact@v4
@@ -398,47 +353,5 @@ jobs:
           merge-multiple: true
           path: ${{ github.workspace }}/apks
 
-      - name: show apks files
-        run: |
-          tree ${{ github.workspace }}/apks
 
-      - name: apks binaries
-        run: |
-          find ${{ github.workspace }}/apks/ -type f -name "*.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_all-V-${{ env.current_date_time }}.7z
-          find ${{ github.workspace }}/apks/ -type f -name "*arm64-v8a.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_arm_v8a-V-${{ env.current_date_time }}.7z
 
-      - name: Download bin archives
-        uses: actions/download-artifact@v5
-        if: ${{ inputs.build_xray_elf }}
-        with:
-          pattern: "bin*"
-          merge-multiple: true
-          path: ${{ github.workspace }}/bin
-
-      - name: show bin files
-        if: ${{ inputs.build_xray_elf }}
-        run: |
-          tree ${{ github.workspace }}/bin
-
-      - name: bin binaries
-        if: ${{ inputs.build_xray_elf }}
-        run: |
-          mv ${{ github.workspace }}/bin/*.zip ${{ github.workspace }}/archives/
-
-      - name: show archives files
-        run: |
-          tree ${{ github.workspace }}/archives
-
-      - name: Release archives
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: "V-${{ env.current_date_time }}"
-          name: "V-${{ env.current_date_time }}"
-          token: ${{ secrets.GITHUB_TOKEN }}
-          prerelease: false
-          body: |
-            V2rayNG(Xray) build result.
-            Xray-core from [${{ inputs.x_branch }}] [${{ needs.build.outputs.xray_short_commit_id }}]
-            v2rayNG from [${{ inputs.ng_repo }}] [${{ inputs.ng_branch }}] [${{ needs.build.outputs.ng_short_commit_id }}]
-          files: |
-            ${{ github.workspace }}/archives/**
