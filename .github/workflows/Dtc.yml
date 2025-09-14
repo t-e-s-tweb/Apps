@@ -201,7 +201,6 @@ jobs:
 
       - name: fix lib conflict
         run: |
-          cp -rf ${{ github.workspace }}/ext/nouse.go ${{ github.workspace }}/build/AndroidLibXrayLite
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
           wget -O nouse.go https://raw.githubusercontent.com/DTCproto/NG/refs/heads/main/ext/nouse.go
           go get google.golang.org/genproto@${{ env.genproto_version }}
