@@ -1,4 +1,4 @@
-name: BUILD_APK_BY_MANUAL_DTC
+name: BUILD_APK_BY_MANUAL
 
 on:
   workflow_dispatch:
@@ -24,65 +24,76 @@ on:
           - "DTCproto"
           - "2dust"
       x_lib_branch:
-        description: "指定AndroidLibXrayLite分支"
+        description: "指定~XrayLite分支"
         required: true
         default: "main"
+        type: choice
+        options:
+          - "main"
+      x_lib_commit_id:
+        description: "指定~XrayLite使用commit id版本"
+        required: true
+        default: "HEAD~0"
         type: string
       ng_repo:
         description: "指定v2rayNG仓库"
         required: true
-        default: "DTCproto"
+        default: "2dust"
         type: choice
         options:
-          - "DTCproto"
           - "2dust"
       ng_branch:
         description: "指定v2rayNG分支"
         required: true
-        default: "hev-tun"
+        default: "master"
         type: choice
         options:
           - "master"
-          - "hev-tun"
       ng_commit_id:
         description: "指定v2rayNG使用commit id版本"
         required: true
         default: "HEAD~0"
         type: string
-      ndk_version:
-        description: "NDK version"
-        required: true
-        default: "29.0.13846066"
-        type: choice
-        options:
-          - "29.0.13846066"
-          - "28.2.13676358"
       build_xray_elf:
         description: "build xray"
-        default: false
+        default: true
         type: boolean
       release_archives:
         description: "enable release archives"
         default: true
         type: boolean
-
+      merge_prs_v2rayng:
+        description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
+        required: false
+        default: '0'
+      merge_prs_xray:
+        description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
+        required: false
+        default: '0'
+      fetch_branch_from_other:
+        description: 'Enter "username/repo branch" to fetch & merge, or 0 for none'
+        required: false
+        default: '0'  
 concurrency:
   group: ${{ github.workflow }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ABI_FILTERS: arm64-v8a
     permissions:
       contents: write
       packages: write
       attestations: write
       id-token: write
+    outputs:
+      xray_short_commit_id: ${{ steps.set_global_params.outputs.xray_short_commit_id }}
+      ng_short_commit_id: ${{ steps.set_global_params.outputs.ng_short_commit_id }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: 'true'
-          repository: DTCproto/NG
-          ref: main
 
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -94,9 +105,9 @@ jobs:
           java --version
 
       - name: Set up Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: "1.24"
+          go-version: "1.25"
       - name: Install gomobile
         run: |
           go install golang.org/x/mobile/cmd/gomobile@latest
@@ -105,20 +116,28 @@ jobs:
       #- name: Set up Gradle
       #  uses: gradle/actions/setup-gradle@v4
 
+      - name: set version
+        run: |
+          echo "ndk_version=29.0.14033849" >> "$GITHUB_ENV"
+          echo "genproto_version=v0.0.0-20250707201910-8d1bb00bc6a7" >> "$GITHUB_ENV"
+          echo "cmdline_tools_version=12266719" >> "$GITHUB_ENV"
+          echo "platforms_short_version=35" >> "$GITHUB_ENV"
+          echo "platforms_full_version=35.0.0" >> "$GITHUB_ENV"
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
           log-accepted-android-sdk-licenses: false
-          cmdline-tools-version: '12266719'
-          packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+          cmdline-tools-version: '${{ env.cmdline_tools_version }}'
+          packages: 'platforms;android-${{ env.platforms_short_version }} build-tools;${{ env.platforms_full_version }} platform-tools'
 
       - name: Install NDK
         run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
-            --channel=3 \
-            --install "ndk;${{ inputs.ndk_version }}"
-          echo "NDK_HOME=$ANDROID_HOME/ndk/${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
-          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/${{ inputs.ndk_version }}" >> "$GITHUB_ENV"
+          echo "y" | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
+            --channel=0 \
+            --install "ndk;${{ env.ndk_version }}"
+          echo "NDK_HOME=${ANDROID_HOME}/ndk/${{ env.ndk_version }}" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_HOME=${ANDROID_HOME}/ndk/${{ env.ndk_version }}" >> "$GITHUB_ENV"
 
       - name: Install System Tools
         run: |
@@ -133,44 +152,40 @@ jobs:
           git checkout --force --quiet ${{ inputs.ng_commit_id }}
           git submodule update --init --recursive
 
-      - name: edit v2rayNG source code
-        if: ${{ inputs.ng_branch != 'hev-tun' }}
+      - name: fix Gradle Pre
         run: |
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
-          chmod 755 *
-          sed -i 's/applicationId = "com.v2ray.ang"/applicationId = "com.xray.ang.dev"/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          chmod +x gradlew
 
-      - name: edit v2rayNG source code(HevTun)
-        if: ${{ inputs.ng_branch == 'hev-tun' }}
+      - name: edit v2rayNG applicationId(x.hev.dev)
         run: |
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
           chmod 755 *
           sed -i 's/applicationId = "com.v2ray.ang"/applicationId = "com.xray.ang.hev.dev"/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
-      
-      - name: add mapdns
+
+      - name: Update VPN_MTU in AppConfig.kt
         run: |
-           sed -i '/appendLine("  udp: '\''udp'\''")/a\
-            appendLine("mapdns:")\
-            appendLine("  address: 198.18.0.2")\
-            appendLine("  port: 53")\
-            appendLine("  network: 240.0.0.0")\
-            appendLine("  netmask: 240.0.0.0")\
-            appendLine("  cache-size: 10000")' \
-            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/service/HevTun2SocksService.kt
-      
+         sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' cd ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+         sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' cd ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+  
+      #- name: fix v2rayNG libs version(mmkv)
+      #  run: |
+      #    cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
+      #    sed -i 's/mmkvStatic = "1.3.12"/mmkvStatic = "1.3.14"/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/gradle/libs.versions.toml
+
       - name: add v2rayNG ndk version
         run: |
-          sed -i $'10i\\\n    ndkVersion = "${{ inputs.ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
+          sed -i $'10i\\\n    ndkVersion = "${{ env.ndk_version }}"' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build.gradle.kts
 
-      - name: import apk sign config
-        run: |
-          cp ${{ github.workspace }}/.github/workflows/dt.jks ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/dt.jks
 
       - name: git clone AndroidLibXrayLite
         run: |
           mkdir -p ${{ github.workspace }}/build
           cd ${{ github.workspace }}/build
           git clone -b ${{ inputs.x_lib_branch }} https://github.com/${{ inputs.x_lib_repo }}/AndroidLibXrayLite.git
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          git checkout --force --quiet ${{ inputs.x_lib_commit_id }}
 
       - name: use git remote repo xray
         run: |
@@ -178,36 +193,97 @@ jobs:
           cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild
           rm -rf Xray-core
           git clone -b ${{ inputs.x_branch }} https://github.com/XTLS/Xray-core.git
-          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
+          cd Xray-core
           git checkout --force --quiet ${{ inputs.x_commit_id }}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Merge selected PRs if any
+          if [ "${{ github.event.inputs.merge_prs_xray }}" != "0" ]; then
+            IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_xray }}"
+            for PR_NUM in "${PR_LIST[@]}"; do
+              echo "Fetching PR #$PR_NUM from XTLS/Xray-core..."
+              git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+              echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+              git merge -X theirs --no-edit pr-$PR_NUM || true
+              echo "Changes from PR #$PR_NUM:"
+              git log HEAD~1..HEAD --stat || true
+            done
+          fi
+
+          # Merge branch from another repo if requested
+          if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
+            REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
+            REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
+            BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
+            echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+            git remote add external https://github.com/$REPO.git
+            git fetch external $BRANCH
+            git merge --no-edit external/$BRANCH
+          fi
+
+          # Save env vars for later
+          echo "XRAY_PATH=$(pwd)" >> "$GITHUB_ENV"
           echo "x_short_version=$(git rev-parse --short HEAD)" >> "$GITHUB_ENV"
+          echo "x_describe_version=$(git describe --always --dirty)" >> "$GITHUB_ENV"
+
 
       - name: edit lib version
         run: |
           sed -i 's/var version/\/\/ var version/g' ${{ github.workspace }}/build/AndroidLibXrayLite/libv2ray_main.go
-          echo ${{ env.x_short_version }} | xargs -I '{}' sed -i 's/fmt.Sprintf("Lib v%d, Xray-core v%s", version, v2core.Version())/fmt.Sprintf("(Lib)Xray-core v%s", v2core.Version()+"@{}")/g' ${{ github.workspace }}/build/AndroidLibXrayLite/libv2ray_main.go
           echo ${{ env.x_short_version }} | xargs -I '{}' sed -i 's/fmt.Sprintf("Lib v%d, Xray-core v%s", version, core.Version())/fmt.Sprintf("(Lib)Xray-core v%s", core.Version()+"@{}")/g' ${{ github.workspace }}/build/AndroidLibXrayLite/libv2ray_main.go
 
       - name: fix lib conflict
         run: |
           cp -rf ${{ github.workspace }}/ext/nouse.go ${{ github.workspace }}/build/AndroidLibXrayLite
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
-          go get google.golang.org/genproto@v0.0.0-20250422160041-2d3770c4ea7f
-          go get google.golang.org/genproto/googleapis/rpc@v0.0.0-20250422160041-2d3770c4ea7f
+          wget -O nouse.go https://raw.githubusercontent.com/DTCproto/NG/refs/heads/main/ext/nouse.go
+          go get google.golang.org/genproto@${{ env.genproto_version }}
+          go get google.golang.org/genproto/googleapis/rpc@${{ env.genproto_version }}
 
-      - name: go get specify xray
+      - name: use local xray-core
         run: |
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
-          go get github.com/xtls/xray-core@${{ env.x_short_version }}
+          echo "Updating go.mod to use local xray-core..."
+          go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
+          go mod tidy
 
-      - name: Build xray exe
+
+      - name: set global params
+        id: set_global_params
+        run: |
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
+          echo "xray_short_commit_id=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+          cd ${{ github.workspace }}/build/v2rayNG
+          echo "ng_short_commit_id=$(git rev-parse --short HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Build xray elf
         if: ${{ inputs.build_xray_elf }}
         run: |
           cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core
-          mkdir build_assets
-          CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -v -o build_assets/xray -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
-          CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -v -o build_assets/xray_arm64 -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
-          CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -v -o build_assets/xray.exe -trimpath -buildvcs=false -ldflags "-s -w -buildid=" ./main
+          echo 'Building Xray for windows(amd64)'
+          mkdir -p build_assets/Xray-windows-64
+          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o build_assets/Xray-windows-64/xray.exe -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -H windowsgui -s -w -buildid=" -v ./main
+          echo 'Building Xray for linux(amd64)'
+          mkdir -p build_assets/Xray-linux-64
+          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o build_assets/Xray-linux-64/xray -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -s -w -buildid=" -v ./main
+          echo 'Building Xray for linux(arm64)'
+          mkdir -p build_assets/Xray-linux-arm64-v8a
+          GOEXPERIMENT=greenteagc CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o build_assets/Xray-linux-arm64-v8a/xray -trimpath -buildvcs=false -gcflags="all=-l=4" -ldflags="-X github.com/xtls/xray-core/core.build=${{ env.x_describe_version }} -s -w -buildid=" -v ./main
+          tree ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
+ 
+      - name: zip xray elf
+        if: ${{ inputs.build_xray_elf }}
+        run: |
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
+          for bin_dir in */; do
+            cd ${bin_dir}
+            touch -mt $(date +%Y01010000) *
+            zip -9vr ../${bin_dir%/}.zip .
+            cd ../
+          done
+          tree ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets
 
       - name: Build libv2ray aar
         run: |
@@ -218,39 +294,60 @@ jobs:
           mkdir -p ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs
           cp *.aar ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
 
-      - name: Build Other libs
-        if: ${{ inputs.ng_branch != 'hev-tun' }}
+      - name: Build ext libs(hysteria)
+        run: |
+          cd ${{ github.workspace }}/build/v2rayNG
+          bash libhysteria2.sh
+          tree ${{ github.workspace }}/build/v2rayNG/hysteria/libs/
+          cp -r ${{ github.workspace }}/build/v2rayNG/hysteria/libs/* ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
+
+      - name: Build ext libs(tun2socks)
         run: |
           cd ${{ github.workspace }}/build/v2rayNG
           bash compile-tun2socks.sh
           tree ${{ github.workspace }}/build/v2rayNG/libs/
           cp -r ${{ github.workspace }}/build/v2rayNG/libs/* ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
-          bash libhysteria2.sh
-          tree ${{ github.workspace }}/build/v2rayNG/hysteria/libs/
-          cp -r ${{ github.workspace }}/build/v2rayNG/hysteria/libs/* ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
-
-      - name: Build Other libs(HevTun)
-        if: ${{ inputs.ng_branch == 'hev-tun' }}
+          
+      - name: Merge selected PRs into V2rayNG
+        if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
         run: |
-          cd ${{ github.workspace }}/build/v2rayNG
-          bash libhysteria2.sh
-          tree ${{ github.workspace }}/build/v2rayNG/hysteria/libs/
-          cp -r ${{ github.workspace }}/build/v2rayNG/hysteria/libs/* ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
-
-      - name: Build APK
+         cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
+         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_v2rayng }}"
+         for PR_NUM in "${PR_LIST[@]}"; do
+           echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
+           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+           echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+           git merge -X theirs --no-edit pr-$PR_NUM || true
+           echo "Changes from PR #$PR_NUM:"
+           git log HEAD~1..HEAD --stat || true
+         done
+      - name: Apply commit from DHR60/V2rayNG self_use_build
+        run: |
+          cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add DHR60 https://github.com/DHR60/V2rayNG.git
+          echo "Pref dnshost"
+          git fetch DHR60 self_use_build
+          git cherry-pick 7965db1cc374efe24c85d2da04997ac87e8c2e97 || true
+          echo "Force Close core"
+          git cherry-pick 454f6d6ff6f285f40f9005cf6bfbe5b79f2ecbe0 || true 
+          
+      - name: Build apk
         run: |
           tree ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
           cd ${{ github.workspace }}/build/v2rayNG/V2rayNG
-          ./gradlew assembleRelease -Pandroid.injected.signing.store.file=${{ github.workspace }}/build/v2rayNG/V2rayNG/app/dt.jks -Pandroid.injected.signing.store.password="dt@pwd" -Pandroid.injected.signing.key.alias="dt" -Pandroid.injected.signing.key.password="dt@pwd"
-
-      - name: Upload xray exe
+          ./gradlew assemblePlaystoreRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+      - name: Upload xray elf
         if: ${{ inputs.build_xray_elf }}
         uses: actions/upload-artifact@v4
         with:
           name: bin-${{ env.x_short_version }}
           compression-level: 9
           path: |
-            ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets/*
+            ${{ github.workspace }}/build/AndroidLibXrayLite/ActionsBuild/Xray-core/build_assets/*.zip
 
       - name: Upload aar
         uses: actions/upload-artifact@v4
@@ -275,17 +372,9 @@ jobs:
             !${{ github.workspace }}/**/*universal*
             !${{ github.workspace }}/**/*fdroid*
 
-      - name: Upload all dev apk
-        uses: actions/upload-artifact@v4
-        with:
-          name: apks_all_dev-${{ env.x_short_version }}
-          compression-level: 9
-          path: |
-            ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/build/outputs/apk/**/*.apk
-            !${{ github.workspace }}/**/*null*
-            !${{ github.workspace }}/**/*fdroid*
 
   release:
+    if: ${{ inputs.release_archives }}
     needs: [build]
     runs-on: ubuntu-latest
     permissions:
@@ -296,44 +385,60 @@ jobs:
     steps:
       - name: Get current date time
         run: |
-          echo "current_date_time=$(date +'%Y-%m-%d-%H-%M')" >> "$GITHUB_ENV"
+          echo "current_date_time=$(TZ=Asia/Shanghai date +'%Y-%m-%d-%H-%M')" >> "$GITHUB_ENV"
 
       - name: Install System Tools
         run: |
           sudo apt install tree -y
 
-      - name: Download TEMP archives
-        uses: actions/download-artifact@v4
-        if: ${{ inputs.release_archives }}
+      - name: Download apks archives
+        uses: actions/download-artifact@v5
         with:
           pattern: "apks_all*"
           merge-multiple: true
-          path: ${{ github.workspace }}/temp
+          path: ${{ github.workspace }}/apks
 
-      - name: show down files
-        if: ${{ inputs.release_archives }}
+      - name: show apks files
         run: |
-          tree ${{ github.workspace }}/temp
+          tree ${{ github.workspace }}/apks
 
-      - name: 7-Zip files binaries
-        if: ${{ inputs.release_archives }}
+      - name: apks binaries
         run: |
-          find ${{ github.workspace }}/temp/ -type f -name "*.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_all-V-${{ env.current_date_time }}.7z
-          find ${{ github.workspace }}/temp/ -type f -name "*arm64-v8a.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_arm_v8a-V-${{ env.current_date_time }}.7z
+          find ${{ github.workspace }}/apks/ -type f -name "*.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_all-V-${{ env.current_date_time }}.7z
+          find ${{ github.workspace }}/apks/ -type f -name "*arm64-v8a.apk" | xargs 7z a -mx9 ${{ github.workspace }}/archives/apks_arm_v8a-V-${{ env.current_date_time }}.7z
 
-      - name: show zip files
-        if: ${{ inputs.release_archives }}
+      - name: Download bin archives
+        uses: actions/download-artifact@v5
+        if: ${{ inputs.build_xray_elf }}
+        with:
+          pattern: "bin*"
+          merge-multiple: true
+          path: ${{ github.workspace }}/bin
+
+      - name: show bin files
+        if: ${{ inputs.build_xray_elf }}
+        run: |
+          tree ${{ github.workspace }}/bin
+
+      - name: bin binaries
+        if: ${{ inputs.build_xray_elf }}
+        run: |
+          mv ${{ github.workspace }}/bin/*.zip ${{ github.workspace }}/archives/
+
+      - name: show archives files
         run: |
           tree ${{ github.workspace }}/archives
 
       - name: Release archives
         uses: softprops/action-gh-release@v2
-        if: ${{ inputs.release_archives }}
         with:
           tag_name: "V-${{ env.current_date_time }}"
           name: "V-${{ env.current_date_time }}"
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: false
-          body: "V2rayNG(Xray) build result. (NG from ${{ inputs.ng_repo }}[${{ inputs.ng_branch }}])"
+          body: |
+            V2rayNG(Xray) build result.
+            Xray-core from [${{ inputs.x_branch }}] [${{ needs.build.outputs.xray_short_commit_id }}]
+            v2rayNG from [${{ inputs.ng_repo }}] [${{ inputs.ng_branch }}] [${{ needs.build.outputs.ng_short_commit_id }}]
           files: |
             ${{ github.workspace }}/archives/**
