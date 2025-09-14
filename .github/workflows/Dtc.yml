@@ -15,40 +15,11 @@ on:
         required: true
         default: "HEAD~0"
         type: string
-      x_lib_repo:
-        description: "指定AndroidLibXrayLite仓库"
-        required: true
-        default: "DTCproto"
-        type: choice
-        options:
-          - "DTCproto"
-          - "2dust"
-      x_lib_branch:
-        description: "指定~XrayLite分支"
-        required: true
-        default: "main"
-        type: choice
-        options:
-          - "main"
       x_lib_commit_id:
         description: "指定~XrayLite使用commit id版本"
         required: true
         default: "HEAD~0"
         type: string
-      ng_repo:
-        description: "指定v2rayNG仓库"
-        required: true
-        default: "2dust"
-        type: choice
-        options:
-          - "2dust"
-      ng_branch:
-        description: "指定v2rayNG分支"
-        required: true
-        default: "master"
-        type: choice
-        options:
-          - "master"
       ng_commit_id:
         description: "指定v2rayNG使用commit id版本"
         required: true
@@ -141,7 +112,7 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/build
           cd ${{ github.workspace }}/build
-          git clone -b ${{ inputs.ng_branch }} https://github.com/${{ inputs.ng_repo }}/v2rayNG.git
+          git clone -b master https://github.com/2dust/v2rayNG.git
           cd ${{ github.workspace }}/build/v2rayNG
           git checkout --force --quiet ${{ inputs.ng_commit_id }}
           git submodule update --init --recursive
@@ -177,7 +148,7 @@ jobs:
         run: |
           mkdir -p ${{ github.workspace }}/build
           cd ${{ github.workspace }}/build
-          git clone -b ${{ inputs.x_lib_branch }} https://github.com/${{ inputs.x_lib_repo }}/AndroidLibXrayLite.git
+          git clone -b main https://github.com/2dust/AndroidLibXrayLite.git
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
           git checkout --force --quiet ${{ inputs.x_lib_commit_id }}
 
