@@ -70,6 +70,12 @@ jobs:
           echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/V2rayNG/gradle.properties
           echo "org.gradle.configureondemand=true" >> /home/runner/work/Apps/Apps/V2rayNG/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+    
+    - name: optimize
+      run: |
+           wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/script.sh
+           chmod +x script.sh
+           ./script.sh
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
         cd ${{ github.workspace }}/V2rayNG
