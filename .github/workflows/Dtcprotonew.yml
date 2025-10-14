@@ -48,7 +48,7 @@ on:
       merge_prs:
         description: 'Comma-separated PR numbers to merge (e.g., "1,2,3" or "0" for none)'
         required: false
-        default: '0'
+        default: ''
         type: string
 
 concurrency:
