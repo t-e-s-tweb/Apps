@@ -83,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre]
     permissions:
-      contentcontents
+      contents: write
       packages: write
       attestations: write
       id-token: write
