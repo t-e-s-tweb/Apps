@@ -45,36 +45,11 @@ on:
         description: "enable release archives"
         default: true
         type: boolean
-      pr_count:
-        description: 'Select PR to merge (0 = none, 1–4 = merge specific PR)'
-        required: true
+      merge_prs:
+        description: 'Comma-separated PR numbers to merge (e.g., "1,2,3" or "0" for none)'
+        required: false
         default: '0'
-        type: choice
-        options:
-          - '0'
-          - '1'
-          - '2'
-          - '3'
-          - '4'
-      pr1:
-        description: 'PR #1 to merge (if any)'
-        required: false
-        default: ''
-
-      pr2:
-        description: 'PR #2 to merge (if any)'
-        required: false
-        default: ''
-
-      pr3:
-        description: 'PR #3 to merge (if any)'
-        required: false
-        default: ''
-
-      pr4:
-        description: 'PR #4 to merge (if any)'
-        required: false
-        default: ''
+        type: string
 
 concurrency:
   group: ${{ github.workflow }}
@@ -108,7 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: [pre]
     permissions:
-      contents: write
+      contentcontents
       packages: write
       attestations: write
       id-token: write
@@ -253,27 +228,15 @@ jobs:
           git checkout --force --quiet ${{ inputs.x_commit_id }}
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          COUNT=${{ github.event.inputs.pr_count }}
-          if [ "$COUNT" -ge 1 ] && [ -n "${{ github.event.inputs.pr1 }}" ]; then
-           echo "Merging PR #${{ github.event.inputs.pr1 }}"
-           git fetch origin pull/${{ github.event.inputs.pr1 }}/head:pr1
-           git merge --no-edit pr1
-          fi
-          if [ "$COUNT" -ge 2 ] && [ -n "${{ github.event.inputs.pr2 }}" ]; then
-           echo "Merging PR #${{ github.event.inputs.pr2 }}"
-           git fetch origin pull/${{ github.event.inputs.pr2 }}/head:pr2
-           git merge --no-edit pr2
-          fi
-          if [ "$COUNT" -ge 3 ] && [ -n "${{ github.event.inputs.pr3 }}" ]; then
-           echo "Merging PR #${{ github.event.inputs.pr3 }}"
-           git fetch origin pull/${{ github.event.inputs.pr3 }}/head:pr3
-           git merge --no-edit pr3
-          fi
-          if [ "$COUNT" -ge 4 ] && [ -n "${{ github.event.inputs.pr4 }}" ]; then
-           echo "Merging PR #${{ github.event.inputs.pr4 }}"
-           git fetch origin pull/${{ github.event.inputs.pr4 }}/head:pr4
-           git merge --no-edit pr4
-          fi
+          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs }}"
+          for PR_NUM in "${PR_LIST[@]}"; do
+            echo "Fetching PR #$PR_NUM..."
+            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+            echo "Merging PR #$PR_NUM (auto-resolve: theirs)..."
+            git merge -X theirs --no-edit pr-$PR_NUM || true
+            echo "Changes from PR #$PR_NUM:"
+            git log HEAD~1..HEAD --stat || true
+          done
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
           go mod tidy
 
