@@ -127,9 +127,9 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-         repository: DTCproto/NG
-         ref: master
-         submodules: 'true'
+          repository: DTCproto/NG
+          ref: master
+          submodules: 'true'
 
       - name: Setup Java
         uses: actions/setup-java@v4
