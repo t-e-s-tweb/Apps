@@ -278,6 +278,32 @@ jobs:
       - name: Build libv2ray aar
         run: |
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          echo "Preparing Go environment..."
+          go env -w GOPRIVATE=github.com/xtls/xray-core
+          go env -w GONOSUMDB=github.com/xtls/xray-core
+          echo "Finding Go module cache path..."
+          MODCACHE=$(go env GOMODCACHE)
+          echo "Module cache path: $MODCACHE"
+          echo "Ensuring xray-core is a full git clone..."
+          XRAY_PATH="$MODCACHE/github.com/xtls/xray-core"
+          rm -rf "$XRAY_PATH"  # Remove any proxy-downloaded copy
+          git clone https://github.com/xtls/xray-core.git "$XRAY_PATH"
+          cd "$XRAY_PATH"
+          git checkout main
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs }}"
+          for PR_NUM in "${PR_LIST[@]}"; do
+            echo "Fetching PR #$PR_NUM..."
+            git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+            echo "Merging PR #$PR_NUM (auto-resolve: theirs)..."
+            git merge -X theirs --no-edit pr-$PR_NUM || true
+            echo "Changes from PR #$PR_NUM:"
+            git log HEAD~1..HEAD --stat || true
+          done
+          cd ${{ github.workspace }}/build/AndroidLibXrayLite
+          echo "Updating go.mod to use local xray-core..."
+          go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
           gomobile init
           go mod tidy -v
           gomobile bind -v -androidapi 21 -trimpath -ldflags='-s -w -buildid=' ./
