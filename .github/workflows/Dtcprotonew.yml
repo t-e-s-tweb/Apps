@@ -323,7 +323,10 @@ jobs:
           bash compile-tun2socks.sh
           tree ${{ github.workspace }}/build/v2rayNG/libs/
           cp -r ${{ github.workspace }}/build/v2rayNG/libs/* ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
-
+      - name: Update VPN_MTU in AppConfig.kt
+        run: |
+         sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+         sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
       - name: Build apk
         run: |
           tree ${{ github.workspace }}/build/v2rayNG/V2rayNG/app/libs/
