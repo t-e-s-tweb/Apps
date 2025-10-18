@@ -122,7 +122,7 @@ jobs:
        
     - name: specify hevtun version
       run: |
-          cd ${{ github.workspace }}/V2rayNG/hev-socks5-tunnel
+          cd ${{ github.workspace }}/hev-socks5-tunnel
           git fetch
           git pull origin HEAD~0
           git checkout --force --quiet HEAD~0     
