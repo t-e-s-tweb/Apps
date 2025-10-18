@@ -123,9 +123,8 @@ jobs:
     - name: specify hevtun version
       run: |
           cd ${{ github.workspace }}/hev-socks5-tunnel
-          git fetch
-          git pull origin HEAD~0
-          git checkout --force --quiet HEAD~0     
+          git fetch origin
+          git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
     - name: Fetch AndroidLibXrayLite
       if: inputs.force_build == 'true'
       run: |
