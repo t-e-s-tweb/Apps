@@ -121,7 +121,6 @@ jobs:
        mkdir -p ~/go/bin
        
     - name: specify hevtun version
-      if: ${{ inputs.specify_hevtun }}
       run: |
           cd ${{ github.workspace }}/V2rayNG/hev-socks5-tunnel
           git fetch
