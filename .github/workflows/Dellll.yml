@@ -120,6 +120,13 @@ jobs:
        mkdir -p ~/.gomobile
        mkdir -p ~/go/bin
        
+    - name: specify hevtun version
+      if: ${{ inputs.specify_hevtun }}
+      run: |
+          cd ${{ github.workspace }}/V2rayNG/hev-socks5-tunnel
+          git fetch
+          git pull origin HEAD~0
+          git checkout --force --quiet HEAD~0     
     - name: Fetch AndroidLibXrayLite
       if: inputs.force_build == 'true'
       run: |
