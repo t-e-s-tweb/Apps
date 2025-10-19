@@ -120,11 +120,11 @@ jobs:
        mkdir -p ~/.gomobile
        mkdir -p ~/go/bin
        
-    - name: specify hevtun version
-      run: |
-          cd ${{ github.workspace }}/hev-socks5-tunnel
-          git fetch origin
-          git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+    #- name: specify hevtun version
+      #run: |
+          #cd ${{ github.workspace }}/hev-socks5-tunnel
+          #git fetch origin
+          #git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
           #git checkout main
           #git pull
     - name: Fetch AndroidLibXrayLite
