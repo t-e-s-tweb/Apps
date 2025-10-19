@@ -237,6 +237,16 @@ jobs:
             echo "Changes from PR #$PR_NUM:"
             git log HEAD~1..HEAD --stat || true
           done
+          # Merge branch from another repo if requested
+          if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
+           REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
+           REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
+           BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
+           echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+           git remote add external https://github.com/$REPO.git
+           git fetch external $BRANCH
+           git merge --no-edit external/$BRANCH
+          fi        
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
           go mod tidy
 
@@ -301,6 +311,16 @@ jobs:
             echo "Changes from PR #$PR_NUM:"
             git log HEAD~1..HEAD --stat || true
           done
+          # Merge branch from another repo if requested
+          if [ "${{ github.event.inputs.fetch_branch_from_other }}" != "0" ]; then
+           REPO_BRANCH="${{ inputs.fetch_branch_from_other }}"
+           REPO=$(echo "$REPO_BRANCH" | awk '{print $1}')
+           BRANCH=$(echo "$REPO_BRANCH" | awk '{print $2}')
+           echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+           git remote add external https://github.com/$REPO.git
+           git fetch external $BRANCH
+           git merge --no-edit external/$BRANCH
+          fi        
           cd ${{ github.workspace }}/build/AndroidLibXrayLite
           echo "Updating go.mod to use local xray-core..."
           go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
