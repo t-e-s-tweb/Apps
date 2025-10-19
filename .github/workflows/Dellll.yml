@@ -124,7 +124,9 @@ jobs:
       run: |
           cd ${{ github.workspace }}/hev-socks5-tunnel
           git fetch origin
-          git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+          #git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+          git checkout main
+          git pull
     - name: Fetch AndroidLibXrayLite
       if: inputs.force_build == 'true'
       run: |
