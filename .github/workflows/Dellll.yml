@@ -385,7 +385,7 @@ jobs:
       uses: svenstaro/upload-release-action@2.7.0
       with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*playstore*/release/*.apk
+          file: ${{ github.workspace }}/V2rayNG/app/build/outputs/apk/*/release/*.apk
           tag: v2
           overwrite: true
           file_glob: true
