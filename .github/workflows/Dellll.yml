@@ -366,7 +366,7 @@ jobs:
     
     - name: Update VPN_MTU in AppConfig.kt
       run: |
-       sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+       #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
        sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
   
     - name: Build APK
@@ -374,7 +374,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assemblePlaystoreRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+        ./gradlew assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
 
 
