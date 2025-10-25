@@ -306,7 +306,8 @@ jobs:
         echo "Updating go.mod to use local xray-core..."
         go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
         go mod edit -replace=gvisor.dev/gvisor=gvisor.dev/gvisor@v0.0.0-20250606001031-fa4c4dd86b43
-        
+
+        go clean --modcache
         go mod tidy
        
 
