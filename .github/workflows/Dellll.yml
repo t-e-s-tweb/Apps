@@ -280,7 +280,7 @@ jobs:
          git fetch origin pull/${{ github.event.inputs.pr4 }}/head:pr4
          git merge --no-edit pr4
         fi
-        if [ "$COUNT" -ge 5 ] && [ -n "${{ github.event.inputs.pr4github.event.inputs.pr5 }}" ]; then
+        if [ "$COUNT" -ge 5 ] && [ -n "${{ github.event.inputs.pr5 }}" ]; then
          echo "Merging PR #${{ github.event.inputs.pr5 }}"
          git fetch origin pull/${{ github.event.inputs.pr5 }}/head:pr5
          git merge --no-edit pr5
