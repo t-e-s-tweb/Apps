@@ -96,9 +96,9 @@ jobs:
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
         echo "Pref dnshost"
         git fetch DHR60 self_use_build
-        git cherry-pick 7965db1cc374efe24c85d2da04997ac87e8c2e97 || true
+        git cherry-pick ccb45563d08bf80d76122555f10dd3c2b9437d3e || true
         echo "Force Close core"
-        git cherry-pick 454f6d6ff6f285f40f9005cf6bfbe5b79f2ecbe0 || true
+        git cherry-pick de53c9af23c028167a4618471f1e34f50004957e || true
 
       #  git remote add kk599 https://github.com/kk599/V2rayNG.git
      #   git fetch kk599 master
