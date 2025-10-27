@@ -39,31 +39,12 @@ jobs:
 
          IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
          for PR_NUM in "${PR_LIST[@]}"; do
-           echo "Fetching PR #$PR_NUM..."
-           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
-           git fetch origin main --unshallow || git fetch origin main
-
-           BASE=$(git merge-base pr-$PR_NUM origin/main)
-           echo "Base commit for PR #$PR_NUM is $BASE"
-
-           CHANGED_FILES=$(git diff --name-only $BASE pr-$PR_NUM)
-
-           if [ -z "$CHANGED_FILES" ]; then
-             echo "No changes detected in PR #$PR_NUM"
-             continue
-           fi
-
-           echo "Checking out changed files from PR #$PR_NUM..."
-           for FILE in $CHANGED_FILES; do
-             mkdir -p $(dirname "$FILE")
-             git checkout pr-$PR_NUM -- "$FILE"
-           done
-
-           git add $CHANGED_FILES
-           git commit -m "Apply changed files from PR #$PR_NUM"
-
-           echo "Files applied from PR #$PR_NUM:"
-           echo "$CHANGED_FILES"
+          echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
+          git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+          git merge -X theirs --no-edit pr-$PR_NUM || true
+          echo "Changes from PR #$PR_NUM:"
+          git log HEAD~1..HEAD --stat || true
          done      
             
   
