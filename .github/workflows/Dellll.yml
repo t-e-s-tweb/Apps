@@ -332,7 +332,7 @@ jobs:
       run: |
        #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
        sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-  
+       sed -i -E '/v2rayConfig\.dns = V2rayConfig\.DnsBean\(/,/^\s*\)/{/\s*\)/i\    serveStale = true,\n    serveExpiredTTL = 3600,\n    enableParallelQuery = true}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
