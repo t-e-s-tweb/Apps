@@ -342,7 +342,7 @@ jobs:
        appendLine("  network: 240.0.0.0")\
        appendLine("  netmask: 240.0.0.0")\
        appendLine("  cache-size: 10000")
-       }' ${{ github.workspace }}V2rayNG/app/src/main/java/com/v2ray/ang/service/TProxyService.kt
+       }' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/service/TProxyService.kt
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
