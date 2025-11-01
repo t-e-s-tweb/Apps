@@ -60,8 +60,8 @@ jobs:
         echo "Pref dnshost"
         git fetch DHR60 self_use_build
         git cherry-pick ccb45563d08bf80d76122555f10dd3c2b9437d3e || true
-        echo "Force Close core"
-        git cherry-pick de53c9af23c028167a4618471f1e34f50004957e || true
+        #echo "Force Close core"
+        #git cherry-pick de53c9af23c028167a4618471f1e34f50004957e || true
 
       #  git remote add kk599 https://github.com/kk599/V2rayNG.git
      #   git fetch kk599 master
