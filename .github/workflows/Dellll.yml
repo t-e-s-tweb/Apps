@@ -234,8 +234,8 @@ jobs:
 
         # Merge branch from another repo if requested
         if [ "${{ github.event.inputs.fetch_branches_from_other }}" != "0" ]; then
-        BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other }}"
-
+         BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other }}"
+        fi
         if [[ "$BRANCH_INPUT" != "0" ]]; then
         IFS=',' read -ra EXT_LIST <<< "$BRANCH_INPUT"
          for ITEM in "${EXT_LIST[@]}"; do
