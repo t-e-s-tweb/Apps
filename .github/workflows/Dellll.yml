@@ -259,6 +259,17 @@ jobs:
 
         done
         fi          
+        
+        #patch
+        sed -i '/go fetch(ctx, s, fqdn, option)/c\
+        // Detach warm-up context from caller; give bounded time to warm cache\n\
+        warmCtx, warmCancel := context.WithTimeout(context.WithoutCancel(ctx), 800*time.Millisecond)\n\
+        go func() {\n\
+            defer warmCancel()\n\
+            _ = fetch(warmCtx, s, fqdn, option)\n\
+        }()' app/dns/nameserver_cached.go
+
+        
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
 
         echo "Updating go.mod to use local xray-core..."
@@ -272,8 +283,7 @@ jobs:
         echo "Initializing gomobile..."
         gomobile init -v
 
-       
-
+        
         echo "Binding for Android..."
         GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
    #   env:
