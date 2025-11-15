@@ -28,8 +28,11 @@ jobs:
           echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
-          echo "android.enableLintVital=false" >> ${{ github.workspace }}/gradle.properties
-      
+          #echo "android.enableLintVital=false" >> ${{ github.workspace }}/gradle.properties
+          
+      - name: Disable abortOnError in lint
+        run: sed -i 's/abortOnError = true/abortOnError = false/' "${{ github.workspace }}/app/build.gradle.kts"
+        
       - name: Copy only changed files from selected PRs into Heli
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
         run: |
