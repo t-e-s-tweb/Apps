@@ -182,9 +182,9 @@ jobs:
           ~/go/pkg/mod
           ~/.gomobile
           ~/go/bin
-        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
+        key: ${{ runner.os }}-go-gomobile-xx
         restore-keys: |
-          ${{ runner.os }}-go-gomobile-
+          ${{ runner.os }}-go-gomobile-xx
 
       
       
@@ -293,7 +293,7 @@ jobs:
           ~/go/pkg/mod
           ~/.gomobile
           ~/go/bin
-        key: ${{ runner.os }}-go-gomobile-${{ github.run_id }}
+        key: ${{ runner.os }}-go-gomobile-xx
 
     
     
