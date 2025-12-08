@@ -343,7 +343,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        cache-disabled: true
+        cache-disabled: false
         cache-overwrite-existing: true
         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     
@@ -360,7 +360,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease --no-build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+        ./gradlew assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
 
 
