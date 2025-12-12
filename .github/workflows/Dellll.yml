@@ -28,7 +28,7 @@ on:
         default: '0'
 
       fetch_branches_from_other_v2:
-        description: 'Enter "username/repo branch" to fetch & merge, or 0 for none'
+        description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
         required: false
         default: '0'
 jobs:
@@ -89,7 +89,12 @@ jobs:
           git log HEAD~1..HEAD --stat || true
         done
 
-
+    - name: Merge selected Branch into V2rayNG
+      if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
+      run: |
+        cd ${{ github.workspace }}/V2rayNG
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
         # Merge branch from another repo if requested
         if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
          BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
