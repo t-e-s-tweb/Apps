@@ -67,7 +67,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v5
         with:
-         cache-disabled: true
+         cache-disabled: false
          cache-overwrite-existing: true
          cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     
