@@ -242,6 +242,7 @@ jobs:
       run: |
         set -e  # Stop on error
         cd ${{ github.workspace }}/build/AndroidLibXrayLite
+    
           
         echo "Preparing Go environment..."
         go env -w GOPRIVATE=github.com/xtls/xray-core
@@ -260,6 +261,21 @@ jobs:
 
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
+
+        # Patch 1: Comment out sort import and usage
+        sed -i 's/^	"sort"/	\/\/"sort"/' app/proxyman/outbound/outbound.go
+        sed -i 's/^	sort\.Strings(tags)/	\/\/sort.Strings(tags)/' app/proxyman/outbound/outbound.go
+    
+        # Patch 2: Disable round-robin logic and force first tag
+        sed -i 's/^	s\.mu\.Lock()/	\/\/s.mu.Lock()/' app/router/balancing.go
+        sed -i 's/^	defer s\.mu\.Unlock()/	\/\/defer s.mu.Unlock()/' app/router/balancing.go
+        sed -i 's/^	tag := tags\[s\.index%n\]/	\/\/tag := tags[s.index%n]/' app/router/balancing.go
+        sed -i 's/^	s\.index = (s\.index + 1) % n/	\/\/s.index = (s.index + 1) % n/' app/router/balancing.go
+        sed -i '/^	\/\/tag := tags\[s\.index%n\]/a\	tag := tags[0]' app/router/balancing.go
+    
+        # Verify patches applied
+        grep -q '//sort.Strings' app/proxyman/outbound/outbound.go && echo "✓ outbound.go patched"
+        grep -q 'tag := tags\[0\]' app/router/balancing.go && echo "✓ balancing.go patched" || exit 1
 
         COUNT=${{ github.event.inputs.pr_count }}
         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs }}"
