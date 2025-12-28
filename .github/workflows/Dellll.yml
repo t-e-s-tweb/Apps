@@ -70,10 +70,10 @@ jobs:
         #echo "Force Close core"
         #git cherry-pick de53c9af23c028167a4618471f1e34f50004957e || true
 
-        git remote add kk599 https://github.com/kk599/v2rayNG.git
-        echo "random tunnel ip"
-        git fetch kk599 master
-        git cherry-pick 1b4907591d8961e212c4a283066f08f08c9ee200 || true
+      #  git remote add kk599 https://github.com/kk599/v2rayNG.git
+      #  echo "random tunnel ip"
+      #  git fetch kk599 master
+      #  git cherry-pick 1b4907591d8961e212c4a283066f08f08c9ee200 || true
 
       #  git remote add kk599 https://github.com/kk599/V2rayNG.git
      #   git fetch kk599 master
