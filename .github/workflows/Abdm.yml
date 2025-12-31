@@ -1,0 +1,69 @@
+name: ABDM
+on:
+  workflow_dispatch:
+
+
+permissions:
+  contents: write
+
+jobs:
+  create-packages:
+    strategy:
+      matrix:
+        os: [ "ubuntu-latest" ]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+         repository: amir1376/ab-download-manager
+         ref: master
+
+      - name: Set up JBR
+        uses: actions/setup-java@v4
+        with:
+          distribution: "jetbrains"
+          java-package: "jdk"
+          java-version: "21"
+          check-latest: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Cache Gradle Dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ matrix.os }}-gradle
+          enableCrossOsArchive: true
+
+      - name: Skip Android build (build android only on Ubuntu)
+        if: matrix.os != 'ubuntu-latest'
+        shell: "bash"
+        run: |
+          echo "SKIP_ANDROID_BUILD=true" >> $GITHUB_ENV
+
+      
+
+      - name: Gradle
+        run: |
+          ./gradlew
+        shell: "bash"
+
+      - name: Build package for current OS using gradle
+        shell: bash
+        run: |
+          ./gradlew createReleaseFolderForCi
+
+      - name: Release Gradle to unlock cache files
+        shell: bash
+        run: |
+          ./gradlew -stop
+
+      - name: Upload output to artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: ./build/ci-release
+          name: app-${{ matrix.os }}
+
