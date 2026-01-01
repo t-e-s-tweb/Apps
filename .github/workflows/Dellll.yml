@@ -225,9 +225,9 @@ jobs:
 
 
     - name: Setup Golang
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@v6
       with:
-        go-version: '1.25'
+        go-version: '1.26.0-rc.1'
         cache: false
         
     - name: Restore Go build, modules, gomobile, and Go tools cache
