@@ -167,7 +167,7 @@ jobs:
       if: inputs.force_build == 'true'
       run: |
         cd ${{ github.workspace }}/build
-        git clone --depth=1 -b main https://github.com/DHR60/AndroidLibXrayLite.git
+        git clone --depth=1 -b main https://github.com/2dust/AndroidLibXrayLite.git
         cd AndroidLibXrayLite
         git submodule update --init
     - name: Setup Android SDK
