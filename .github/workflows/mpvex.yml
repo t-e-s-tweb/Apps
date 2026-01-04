@@ -35,7 +35,8 @@ jobs:
           java-version: 17
       - name: Enable Gradle caching
         run: |
-          echo -e "\org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
+          echo "" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.configureondemand=true" >> /home/runner/work/Apps/Apps/gradle.properties
           echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
