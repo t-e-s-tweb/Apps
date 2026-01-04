@@ -11,15 +11,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      ABI_FILTERS: arm64-v8a
     outputs:
       commit_count: ${{ steps.set_commit.outputs.commit_count }}
       build_time: ${{ steps.set_commit.outputs.build_time }}
-      universal_size: ${{ steps.set_commit.outputs.universal_size }}
       arm64-v8a_size: ${{ steps.set_commit.outputs.arm64-v8a_size }}
-      armeabi-v7a_size: ${{ steps.set_commit.outputs.armeabi-v7a_size }}
-      x86_size: ${{ steps.set_commit.outputs.x86_size }}
-      x86_64_size: ${{ steps.set_commit.outputs.x86_64_size }}
-
+      
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
@@ -55,7 +53,8 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assemblePreview
+        run: ./gradlew assemblePreview --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+
 
       
       - name: Copy build artifacts
@@ -67,7 +66,7 @@ jobs:
           echo "commit_count=$commit_count" >> $GITHUB_OUTPUT
           echo "build_time=$build_time" >> $GITHUB_OUTPUT
 
-          declare -a apks=("universal" "arm64-v8a" "armeabi-v7a" "x86" "x86_64")
+          declare -a apks=("arm64-v8a")
           mkdir -p output
           # Initialize empty array for file sizes
           declare -a file_sizes=()
