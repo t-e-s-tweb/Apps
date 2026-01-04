@@ -48,6 +48,8 @@ jobs:
          -e 's/include([^)]*)/include("arm64-v8a")/' \
          -e 's/isUniversalApk = true/isUniversalApk = false/' \
           app/build.gradle.kts
+          sed -i 's/val volumeGestureSens = 0\.1f/val volumeGestureSens = 0.3f/' \
+          app/src/main/java/app/marlboroadvance/mpvex/ui/player/controls/GestureHandler.kt
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
