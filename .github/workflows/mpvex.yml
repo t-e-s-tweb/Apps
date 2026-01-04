@@ -33,7 +33,22 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: 17
-          cache: 'gradle'
+      - name: Enable Gradle caching
+        run: |
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configureondemand=true" >> /home/runner/work/Apps/Apps/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.unsafe.configuration-cache-problems=warn" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.daemon=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.parallel=true" >> ${{ github.workspace }}/gradle.properties
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+         cache-disabled: false
+         cache-overwrite-existing: true
+         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
