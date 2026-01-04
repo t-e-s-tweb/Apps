@@ -158,7 +158,7 @@ jobs:
           cd ${{ github.workspace }}/hev-socks5-tunnel
           git fetch --all
           git pull origin main
-          git checkout --force --quiet 4682d7983c600dc702f33759f0250c96f54a0f2c
+          git checkout --force --quiet e17d52de86b451b8f079964157e726a9b96a471a
           git submodule update --init --recursive
           #git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
           #git checkout main
