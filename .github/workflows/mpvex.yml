@@ -42,6 +42,12 @@ jobs:
           echo "org.gradle.daemon=true" >> ${{ github.workspace }}/gradle.properties
           echo "org.gradle.parallel=true" >> ${{ github.workspace }}/gradle.properties
 
+      - name: armv8
+        run: |
+         sed -i \
+         -e 's/include([^)]*)/include("arm64-v8a")/' \
+         -e 's/isUniversalApk = true/isUniversalApk = false/' \
+          app/build.gradle.kts
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
