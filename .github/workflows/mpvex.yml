@@ -59,8 +59,8 @@ jobs:
       - name: Publish release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref_name }}
-          name: ${{ github.ref_name }}
+          tag_name: mpvEx
+          name: mpvEx
           prerelease: false
           draft: false
           files: "**/*.apk"
