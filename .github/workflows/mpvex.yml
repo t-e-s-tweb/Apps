@@ -72,7 +72,7 @@ jobs:
           declare -a file_sizes=()
           
           for arch in "${apks[@]}"; do
-            src="app/build/outputs/apk/preview/app-${arch}-*.apk"
+            src="app/build/outputs/apk/preview/*.apk"
             dest="output/mpvEx-preview-r${commit_count}-${arch}.apk"
             cp "$src" "$dest"
             
