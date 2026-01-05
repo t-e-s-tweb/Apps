@@ -156,9 +156,9 @@ jobs:
     - name: specify hevtun version
       run: |
           cd ${{ github.workspace }}/hev-socks5-tunnel
-          git fetch --all
+          git fetch origin
+          git checkout main
           git pull origin main
-          git checkout --force --quiet e17d52de86b451b8f079964157e726a9b96a471a
           git submodule update --init --recursive
           #git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
           #git checkout main
