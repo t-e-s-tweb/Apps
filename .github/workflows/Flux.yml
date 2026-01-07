@@ -24,7 +24,7 @@ jobs:
       run: |
         sed -i \
         -e "s|https://inv.nadeko.net|https://echostreamz.com|g" \
-        -e "s|https://api.invidious.io/instances.json|https://api.invidious.io/instances.json|g" \
+        -e "s|https://api.invidious.io/instances.json|https://t-e-s-tweb.github.io/v-rules/instances.json|g" \
         lib/core/strings.dart
         grep -n "echostreamz\|iv.json" lib/core/strings.dart
 
