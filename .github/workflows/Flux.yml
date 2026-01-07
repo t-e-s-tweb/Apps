@@ -16,10 +16,10 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
       with:
-          repository: mu-fazil-vk/FluxTube
-          ref: major-fixes
+        repository: mu-fazil-vk/FluxTube
+        ref: major-fixes
 
-
+    # Patch URLs
     - name: edit
       run: |
         sed -i \
@@ -27,41 +27,56 @@ jobs:
         -e "s|https://api.invidious.io/instances.json|https://raw.githubusercontent.com/n-ce/Uma/refs/heads/main/iv.json|g" \
         lib/core/strings.dart
         grep -n "echostreamz\|iv.json" lib/core/strings.dart
-    
-    
-    
-    
+
+    # Java (Gradle needs this)
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
-       java-version: '17'
-       distribution: 'temurin' # Options: adopt, zulu, temurin, etc.
-    # Set up Flutter
+        java-version: '17'
+        distribution: temurin
+        cache: gradle   # ⭐ BUILT-IN GRADLE CACHE
+
+    # Flutter (includes SDK cache)
     - name: Set up Flutter ${{ matrix.flutter-version }}
       uses: subosito/flutter-action@v2
       with:
+        flutter-version: ${{ matrix.flutter-version }}
         channel: stable
+        cache: true     # ⭐ FLUTTER SDK CACHE
+
+    # Cache Dart & Pub
+    - name: Cache Pub packages
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.pub-cache
+          .dart_tool
+        key: pub-${{ runner.os }}-${{ hashFiles('**/pubspec.lock') }}
+        restore-keys: |
+          pub-${{ runner.os }}-
 
     # Install dependencies
     - name: Install dependencies
       run: flutter pub get
 
-    # Run build_runner for Isar & Bloc
+    # Run build_runner (Isar, Bloc, etc.)
     - name: Run build_runner
       run: flutter pub run build_runner build --delete-conflicting-outputs
+
+    # Remove signing config
     - name: remove sign
-      run : sed -i "/signingConfig signingConfigs.release/d" android/app/build.gradle
-    # Build the Flutter app
+      run: sed -i "/signingConfig signingConfigs.release/d" android/app/build.gradle
+
+    # Build APK
     - name: Build APK
       run: flutter build apk --release
-    
-    
+
+    # Upload APK to release
     - name: Upload binaries to release
       uses: svenstaro/upload-release-action@2.7.0
       with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ${{ github.workspace }}/build/app/outputs/flutter-apk/*.apk
-          tag: flux
-          overwrite: true
-          file_glob: true
-   
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: build/app/outputs/flutter-apk/*.apk
+        tag: flux
+        overwrite: true
+        file_glob: true
