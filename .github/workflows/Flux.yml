@@ -18,6 +18,19 @@ jobs:
       with:
           repository: mu-fazil-vk/FluxTube
           ref: major-fixes
+
+
+    - name: edit
+      run: |
+        sed -i \
+        -e "s|https://inv.nadeko.net|https://echostreamz.com|g" \
+        -e "s|https://api.invidious.io/instances.json|https://raw.githubusercontent.com/n-ce/Uma/refs/heads/main/iv.json|g" \
+        lib/core/strings.dart
+        grep -n "echostreamz\|iv.json" lib/core/strings.dart
+    
+    
+    
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
