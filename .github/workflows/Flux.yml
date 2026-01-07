@@ -41,10 +41,14 @@ jobs:
     # Build the Flutter app
     - name: Build APK
       run: flutter build apk --release
-
-    # Optionally, store the APK as an artifact
-    - name: Upload APK
-      uses: actions/upload-artifact@v3
+    
+    
+    - name: Upload binaries to release
+      uses: svenstaro/upload-release-action@2.7.0
       with:
-        name: release-apk
-        path: build/app/outputs/flutter-apk/*.apk
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ${{ github.workspace }}/build/app/outputs/flutter-apk/*.apk
+          tag: flux
+          overwrite: true
+          file_glob: true
+   
