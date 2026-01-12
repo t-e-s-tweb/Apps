@@ -75,7 +75,7 @@ jobs:
 
         if [ -n "$DNS_HOST_SHA" ]; then
          echo "Found commit: $DNS_HOST_SHA"
-         git cherry-pick $DNS_HOST_SHA || true
+         #git cherry-pick $DNS_HOST_SHA || true
         else
         echo "Error: No commit found with message 'perf. dns host'"
         fi
