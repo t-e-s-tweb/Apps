@@ -418,8 +418,7 @@ jobs:
 
 
 
-    - name: Stop Gradle
-      run: ./gradlew --stop
+
 
     - name: Remove Gradle caches
       run: |
