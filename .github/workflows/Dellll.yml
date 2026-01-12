@@ -75,7 +75,7 @@ jobs:
 
         if [ -n "$DNS_HOST_SHA" ]; then
          echo "Found commit: $DNS_HOST_SHA"
-         #git cherry-pick $DNS_HOST_SHA || true
+         git cherry-pick $DNS_HOST_SHA || true
         else
         echo "Error: No commit found with message 'perf. dns host'"
         fi
@@ -404,7 +404,7 @@ jobs:
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v4
       with:
-        cache-disabled: true
+        cache-disabled: false
         cache-overwrite-existing: true
         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
     
@@ -415,13 +415,27 @@ jobs:
        sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
        sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
        #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseIPv4,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+
+
+
+    - name: Stop Gradle
+      run: ./gradlew --stop
+
+    - name: Remove Gradle caches
+      run: |
+        rm -rf ~/.gradle/caches
+        rm -rf ~/.gradle/wrapper
+        rm -rf .gradle
+        find . -name build -type d -exec rm -rf {} +
+
+
        
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+        ./gradlew clean assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
 
 
