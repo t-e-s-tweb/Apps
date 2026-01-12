@@ -421,7 +421,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew assembleRelease --no-build-cache -PABI_FILTERS="${ABI_FILTERS}"
+        ./gradlew assembleRelease --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
 
 
