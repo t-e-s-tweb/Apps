@@ -338,7 +338,7 @@ jobs:
 
         
         echo "Binding for Android..."
-        GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 21 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
+        GOEXPERIMENT=greenteagc gomobile bind -v -androidapi 24 -trimpath -gcflags="all=-l=4" -ldflags='-s -w -buildid=' ./
    #   env:
    #     ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
    
