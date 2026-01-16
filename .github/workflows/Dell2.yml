@@ -49,12 +49,13 @@ jobs:
         \
             ndkVersion = "28.2.13676358"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
 
-    - name: update hevtun to latest commit
+    - name: specify hevtun version
       run: |
-       cd ${{ github.workspace }}/hev-socks5-tunnel
-       git checkout main
-       git pull origin main
-       git submodule update --init --recursive
+          cd ${{ github.workspace }}/hev-socks5-tunnel
+          git fetch --all
+          git pull origin main
+          git checkout --force --quiet 4b67214903fcb7fececc010d29dfedbdfc2b2cc5
+          git submodule update --init --recursive
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
       uses: actions/cache/restore@v4
