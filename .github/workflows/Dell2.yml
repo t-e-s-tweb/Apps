@@ -174,19 +174,19 @@ jobs:
        sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
        sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
        #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseIPv4,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-    - name: test tun
-      run: | 
-         sed -i '/"protocol": "tun"/,/}/ {
-         /"settings": {/,/}/ {
-         /}/a\
-         ,\
-         "sniffing": {\
-         "enabled": true,\
-         "routeOnly": true,\
-         "destOverride": ["http", "tls"]\
-         }
-         }
-         }' ${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config_with_tun.json
+   # - name: test tun
+   #   run: | 
+#         sed -i '/"protocol": "tun"/,/}/ {
+     #    /"settings": {/,/}/ {
+    #     /}/a\
+   #      ,\
+  #       "sniffing": {\
+   #      "enabled": true,\
+   #      "routeOnly": true,\
+    #     "destOverride": ["http", "tls"]\
+   #      }
+   #      }
+    #     }' ${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config_with_tun.json
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
