@@ -56,7 +56,7 @@ jobs:
 
     - name: specify hevtun version
       run: |
-          cd ${{ github.workspace }}/build/v2rayNG/hev-socks5-tunnel
+          cd ${{ github.workspace }}/hev-socks5-tunnel
           git fetch --all
           git pull origin main
           git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
