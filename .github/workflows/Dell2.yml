@@ -15,6 +15,11 @@ on:
         description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
         required: false
         default: '0'
+      hevtun_commit_id:
+        description: "指定HevTun使用commit id版本"
+        required: true
+        default: "HEAD~0"
+        type: string
   push:
     branches:
       - master
@@ -51,11 +56,12 @@ jobs:
 
     - name: specify hevtun version
       run: |
-          cd ${{ github.workspace }}/hev-socks5-tunnel
+          cd ${{ github.workspace }}/build/v2rayNG/hev-socks5-tunnel
           git fetch --all
           git pull origin main
-          git checkout --force --quiet 4b67214903fcb7fececc010d29dfedbdfc2b2cc5
+          git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
           git submodule update --init --recursive
+
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
       uses: actions/cache/restore@v4
