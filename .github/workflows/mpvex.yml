@@ -61,7 +61,9 @@ jobs:
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
-        run: ./gradlew assemblePreview --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+        run: |
+         ./gradlew tasks --all | grep assemble
+         ./gradlew assemblePreview --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
 
 
       - name: Publish release
