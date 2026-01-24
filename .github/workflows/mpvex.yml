@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: marlboro-advance/mpvEx
-          ref: master
+          ref: dev
           fetch-depth: 0
 
       - name: Setup JDK 17
