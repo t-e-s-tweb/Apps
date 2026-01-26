@@ -107,7 +107,7 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
-        cache: 'gradle'
+       
 
     - name: Apply commit from DHR60/V2rayNG self_use_build
       run: |
