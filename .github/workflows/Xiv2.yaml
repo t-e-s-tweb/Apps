@@ -21,8 +21,26 @@ jobs:
           ref: master
       - name: del
         run: |
+          bash -c 'inside=0; brace_count=0; while IFS= read -r line; do
+          if [[ "$line" =~ signingConfigs[[:space:]]*{ ]]; then inside=1; brace_count=1; echo "// $line"; continue; fi
+          if (( inside == 1 )); then
+           open=$(grep -o "{" <<< "$line" | wc -l)
+           close=$(grep -o "}" <<< "$line" | wc -l)
+           brace_count=$(( brace_count + open - close ))
+           echo "// $line"
+           if (( brace_count == 0 )); then inside=0; fi
+           continue
+          fi
+          if [[ "$line" =~ signingConfig[[:space:]]+signingConfigs\.[a-zA-Z0-9_]+ ]]; then
+           echo "// $line"
+          else
+          echo "$line"
+          fi
+          done < app/build.gradle > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle'
+
+        
           # Remove signingConfigs block (including nested braces) and comment signingConfig lines
-          perl -0777 -pe 's/signingConfigs\s*{.*?}\n//gs' app/build.gradle | sed 's/^\s*signingConfig signingConfigs\.[a-zA-Z0-9_]\+/\/\/ &/' > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
+          #perl -0777 -pe 's/signingConfigs\s*{.*?}\n//gs' app/build.gradle | sed 's/^\s*signingConfig signingConfigs\.[a-zA-Z0-9_]\+/\/\/ &/' > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
           #awk '/signingConfigs[[:space:]]*{/ {inside=1} inside {print "// " $0} inside && /}$/ {inside=0; next} !inside {print}' app/build.gradle | sed 's/^\s*signingConfig signingConfigs\.[a-zA-Z0-9_]\+/\/\/ &/' > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
       # -------------------------------
       # Setup Java
