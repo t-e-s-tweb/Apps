@@ -21,8 +21,7 @@ jobs:
           ref: master
       - name: del
         run: |
-          sed -i '/signingConfigs {/,/^}/d' app/build.gradle
-          sed -i '/signingConfig signingConfigs\./d' app/build.gradle
+          awk '/signingConfigs[[:space:]]*{/ {inside=1} inside {print "// " $0} inside && /}$/ {inside=0; next} !inside {print}' app/build.gradle | sed 's/^\s*signingConfig signingConfigs\.[a-zA-Z0-9_]\+/\/\/ &/' > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
       # -------------------------------
       # Setup Java
       # -------------------------------
