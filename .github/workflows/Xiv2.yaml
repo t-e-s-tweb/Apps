@@ -98,8 +98,8 @@ jobs:
       # -------------------------------
       - name: Build APKs
         run: |
-          # Remove the entire signingConfigs block and all signingConfig assignments
-           sed -i.bak -E '/signingConfigs[[:space:]]*{/,/}/d; s/^\s*signingConfig\s+signingConfigs\.[a-zA-Z0-9_]+//g' app/build.gradle
+          sed -i '/signingConfigs {/,/^}/d' app/build.gradle
+          sed -i '/signingConfig signingConfigs\./d' app/build.gradle
           ./gradlew assembleRelease
 
       # -------------------------------
