@@ -19,7 +19,10 @@ jobs:
           submodules: true
           repository: Exclude0122/xivpn
           ref: master
-
+      - name: del
+        run: |
+          sed -i '/signingConfigs {/,/^}/d' app/build.gradle
+          sed -i '/signingConfig signingConfigs\./d' app/build.gradle
       # -------------------------------
       # Setup Java
       # -------------------------------
@@ -98,8 +101,6 @@ jobs:
       # -------------------------------
       - name: Build APKs
         run: |
-          sed -i '/signingConfigs {/,/^}/d' app/build.gradle
-          sed -i '/signingConfig signingConfigs\./d' app/build.gradle
           ./gradlew assembleRelease
 
       # -------------------------------
