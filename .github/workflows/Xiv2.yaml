@@ -142,6 +142,7 @@ jobs:
           file_glob: true
           prerelease: true
           overwrite: true
+          tag: xiv2
           files: |
             ./app/build/outputs/apk/universal/release/app-universal-release.apk
             ./app/build/outputs/apk/x86_64/release/app-x86_64-release.apk
