@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           submodules: true
-          repository: Exclude0122/libxivpn
+          repository: Exclude0122/xivpn
           ref: master
 
       # -------------------------------
