@@ -1,0 +1,123 @@
+name: xiv2
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      # -------------------------------
+      # Checkout xivpn repository
+      # -------------------------------
+      - name: Checkout xivpn
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          repository: Exclude0122/libxivpn
+          ref: master
+
+      # -------------------------------
+      # Setup Java
+      # -------------------------------
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: 17
+
+      # -------------------------------
+      # Setup Android NDK
+      # -------------------------------
+      - name: Setup NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          add-to-path: false
+          ndk-version: r27
+
+      # -------------------------------
+      # Update xray-core to latest main and compare SHA
+      # -------------------------------
+      - name: Update xray-core and compare SHA
+        run: |
+          cd libxivpn
+
+          # XIVPN commit
+          XIVPN_SHA=$(git rev-parse HEAD)
+          echo "xivpn commit: $XIVPN_SHA"
+
+          # Latest xray-core main SHA on GitHub
+          XRAY_REMOTE_SHA=$(git ls-remote https://github.com/xtls/xray-core.git refs/heads/main | cut -f1)
+          echo "Latest xray-core main commit on GitHub: $XRAY_REMOTE_SHA"
+
+          # Update Go module to latest xray-core main
+          go get github.com/xtls/xray-core@main
+          go mod tidy
+
+          # Extract pseudo-version SHA Go will actually use
+          XRAY_LOCAL_PSEUDO=$(go list -m -json github.com/xtls/xray-core | jq -r '.Version')
+          XRAY_LOCAL_SHA=$(echo $XRAY_LOCAL_PSEUDO | awk -F'-' '{print $3}')
+          echo "xray-core pseudo-version SHA used by libxivpn: $XRAY_LOCAL_SHA"
+
+          # Compare SHAs
+          if [ "$XRAY_LOCAL_SHA" = "$XRAY_REMOTE_SHA" ]; then
+            echo "✅ xray-core is up to date"
+          else
+            echo "⚠️ xray-core used by libxivpn is not the latest main commit"
+          fi
+
+      # -------------------------------
+      # Build Android .so libraries
+      # -------------------------------
+      - name: Build Android libraries
+        working-directory: ./libxivpn
+        env:
+          NDK: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64
+        run: |
+          ./build.sh all patch
+          mkdir -p ../app/src/main/jniLibs/arm64-v8a
+          mkdir -p ../app/src/main/jniLibs/x86_64
+          mkdir -p ../app/src/main/jniLibs/armeabi-v7a
+          cp libxivpn_x86_64.so ../app/src/main/jniLibs/x86_64/libxivpn.so
+          cp libxivpn_arm64.so ../app/src/main/jniLibs/arm64-v8a/libxivpn.so
+          cp libxivpn_armv7a.so ../app/src/main/jniLibs/armeabi-v7a/libxivpn.so
+
+      # -------------------------------
+      # Setup Android SDK
+      # -------------------------------
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      # -------------------------------
+      # Build APKs without signing
+      # -------------------------------
+      - name: Build APKs
+        run: ./gradlew assembleRelease
+
+      # -------------------------------
+      # Show SHAs and APK outputs
+      # -------------------------------
+      - name: Show SHAs and APK paths
+        run: |
+          echo "xivpn commit: $(git rev-parse HEAD)"
+          XRAY_SHA=$(go list -m -json github.com/xtls/xray-core | jq -r '.Version')
+          echo "xray-core pseudo-version: $XRAY_SHA"
+          echo "APK outputs:"
+          find ./app/build/outputs/apk -type f -name "*.apk"
+
+      # -------------------------------
+      # Release step (GitHub release)
+      # -------------------------------
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ./app/build/outputs/apk/universal/release/app-universal-release.apk
+            ./app/build/outputs/apk/x86_64/release/app-x86_64-release.apk
+            ./app/build/outputs/apk/arm64_v8a/release/app-arm64_v8a-release.apk
+            ./app/build/outputs/apk/armabi_v7a/release/app-armabi_v7a-release.apk
