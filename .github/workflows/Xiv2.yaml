@@ -28,6 +28,7 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: 17
+          cache: gradle
 
       # -------------------------------
       # Setup Android NDK
@@ -96,7 +97,10 @@ jobs:
       # Build APKs without signing
       # -------------------------------
       - name: Build APKs
-        run: ./gradlew assembleRelease
+        run: |
+          # Remove the entire signingConfigs block and all signingConfig assignments
+           sed -i.bak -E '/signingConfigs[[:space:]]*{/,/}/d; s/^\s*signingConfig\s+signingConfigs\.[a-zA-Z0-9_]+//g' app/build.gradle
+          ./gradlew assembleRelease
 
       # -------------------------------
       # Show SHAs and APK outputs
