@@ -37,7 +37,13 @@ jobs:
           echo "$line"
           fi
           done < app/build.gradle > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle'
-
+      - name: MTU
+        run: |
+            sed -i \
+            -e 's/inbound\.port = [0-9]\+/inbound.port = 0/' \
+            -e '/inbound\.listen = "127\.0\.0\.1";/d' \
+            -e 's/inbound\.settings\.put("MTU",[[:space:]]*[0-9]\+)/inbound.settings.put("MTU", 8500)/' \
+             app/src/main/java/cn/gov/xivpn2/service/XiVPNService.java
         
           # Remove signingConfigs block (including nested braces) and comment signingConfig lines
           #perl -0777 -pe 's/signingConfigs\s*{.*?}\n//gs' app/build.gradle | sed 's/^\s*signingConfig signingConfigs\.[a-zA-Z0-9_]\+/\/\/ &/' > app/build.gradle.tmp && mv app/build.gradle.tmp app/build.gradle
