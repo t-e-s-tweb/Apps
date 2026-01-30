@@ -63,7 +63,7 @@ jobs:
       - name: Build with Gradle
         run: |
          ./gradlew tasks --all | grep assemble
-         ./gradlew assemblePreview --build-cache --configuration-cache -PABI_FILTERS="${ABI_FILTERS}"
+         ./gradlew assemblePreview --build-cache --configuration-cache
 
 
       - name: Publish release
