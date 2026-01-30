@@ -61,7 +61,11 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           cache: gradle
-
+      - name: optimization
+        run: |
+          wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/patch.sh
+          chmod +x patch.sh
+          ./patch.sh
       # -------------------------------
       # Setup Android NDK
       # -------------------------------
