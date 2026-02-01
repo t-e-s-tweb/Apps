@@ -187,7 +187,7 @@ jobs:
        #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
        sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
        sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false,\n disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-       sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null,\n disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null,\n val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
        #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseSystem,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
        sed -i -E \
        '/skipFallback = true,/{
