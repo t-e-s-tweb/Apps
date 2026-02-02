@@ -78,6 +78,7 @@ jobs:
           wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/patch.sh
           chmod +x patch.sh
           ./patch.sh
+          go env
       # -------------------------------
       # Setup Android NDK
       # -------------------------------
