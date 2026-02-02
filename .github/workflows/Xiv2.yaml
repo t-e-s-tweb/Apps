@@ -61,6 +61,18 @@ jobs:
           distribution: 'temurin'
           java-version: 17
           cache: gradle
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: '1.26.0-rc.2'
+          check-latest: true
+
+      - name: build.sh
+        run: |
+         cd libxivpn
+         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/build.sh -N
+         chmod +x build.sh
+         cd ..
       - name: optimization
         run: |
           wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/patch.sh
@@ -75,7 +87,7 @@ jobs:
         with:
           add-to-path: false
           ndk-version: r27
-
+          local-cache: true
       # -------------------------------
       # Update xray-core to latest main and compare SHA
       # -------------------------------
@@ -115,13 +127,13 @@ jobs:
         env:
           NDK: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64
         run: |
-          ./build.sh all patch
+          ./build.sh all arm64
           mkdir -p ../app/src/main/jniLibs/arm64-v8a
-          mkdir -p ../app/src/main/jniLibs/x86_64
-          mkdir -p ../app/src/main/jniLibs/armeabi-v7a
-          cp libxivpn_x86_64.so ../app/src/main/jniLibs/x86_64/libxivpn.so
+          #  mkdir -p ../app/src/main/jniLibs/x86_64
+          #  mkdir -p ../app/src/main/jniLibs/armeabi-v7a
+          #  cp libxivpn_x86_64.so ../app/src/main/jniLibs/x86_64/libxivpn.so
           cp libxivpn_arm64.so ../app/src/main/jniLibs/arm64-v8a/libxivpn.so
-          cp libxivpn_armv7a.so ../app/src/main/jniLibs/armeabi-v7a/libxivpn.so
+          # cp libxivpn_armv7a.so ../app/src/main/jniLibs/armeabi-v7a/libxivpn.so
 
       # -------------------------------
       # Setup Android SDK
