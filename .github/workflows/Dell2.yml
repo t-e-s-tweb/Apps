@@ -10,7 +10,10 @@ on:
         description: 'Comma-separated PR numbers to merge into V2rayNG app (0 = none)'
         required: false
         default: '0'
-
+      clear_path:
+        description: 'make dhr60 clear path (0 = none)'
+        required: false
+        default: '0'
       fetch_branches_from_other_v2:
         description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
         required: false
@@ -101,6 +104,11 @@ jobs:
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
 
+    - name: Refactor package name
+      if: ${{ github.event.inputs.clear_path != '0' }}
+      run: |
+        wget https://raw.githubusercontent.com/DHR60/v2rayNG/refs/heads/self_use_build/refactor_package.py
+        python3 refactor_package.py
   
     - name: Setup Java
       uses: actions/setup-java@v4.8.0
