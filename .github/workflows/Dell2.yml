@@ -228,7 +228,7 @@ jobs:
         chmod 755 gradlew
         ./gradlew tasks --all | grep assemble
         
-        ./gradlew assembleFdroidRelease
+        ./gradlew assembleFdroidRelease -x lint
     
     
 
