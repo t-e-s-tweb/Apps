@@ -232,7 +232,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew tasks --all | grep assemble
+        ./gradlew tasks --all | grep -E 'assemble|lint|abi'
         
         ./gradlew assembleRelease -PABI_FILTERS=arm64-v8a -x lint -x lintVitalAnalyzeFdroidRelease -x lintVitalAnalyzePlaystoreRelease -x lintVitalReportFdroidRelease -x lintVitalReportPlaystoreRelease -x lintVitalPlaystoreRelease -x lintVitalFdroidRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
     
