@@ -42,8 +42,8 @@ jobs:
         
     - name: Enable Gradle flags
       run: |
-          echo "android.lint.abortOnError=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "\nandroid.lint.abortOnError=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "\nandroid.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3.2.0
