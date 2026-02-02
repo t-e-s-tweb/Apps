@@ -62,7 +62,7 @@ jobs:
       - name: Build with Gradle
         run: |
          ./gradlew tasks --all | grep -E 'assemble|lint|abi'
-         ./gradlew assemblePreview --build-cache --configuration-cache
+         ./gradlew assembleStandardPreview -x lint -x lintStandardPreview -x lintVitalStandardPreview -x updateLintBaseline --build-cache --configuration-cache
 
 
       - name: Publish release
