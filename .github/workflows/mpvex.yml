@@ -31,6 +31,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: 17
+          cache: gradle
       - name: Enable Gradle caching
         run: |
           echo "" >> ${{ github.workspace }}/gradle.properties
@@ -57,9 +58,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-         cache-disabled: false
-         cache-overwrite-existing: true
-         cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+         cache-disabled: true
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
