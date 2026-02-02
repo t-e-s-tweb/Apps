@@ -11,8 +11,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      ABI_FILTERS: arm64-v8a
     outputs:
       commit_count: ${{ steps.set_commit.outputs.commit_count }}
       build_time: ${{ steps.set_commit.outputs.build_time }}
