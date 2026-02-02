@@ -104,11 +104,7 @@ jobs:
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
 
-    - name: Refactor package name
-      if: ${{ github.event.inputs.clear_path != '0' }}
-      run: |
-        wget https://raw.githubusercontent.com/DHR60/v2rayNG/refs/heads/self_use_build/refactor_package.py
-        python3 refactor_package.py
+
   
     - name: Setup Java
       uses: actions/setup-java@v4.8.0
@@ -219,6 +215,12 @@ jobs:
    #      }
    #      }
     #     }' ${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config_with_tun.json
+
+    - name: Refactor package name
+      if: ${{ github.event.inputs.clear_path != '0' }}
+      run: |
+        wget https://raw.githubusercontent.com/t-e-s-tweb/rules/refs/heads/master/scripts/refactor_package.py
+        python3 refactor_package.py    
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
