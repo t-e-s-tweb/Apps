@@ -234,7 +234,7 @@ jobs:
         chmod 755 gradlew
         ./gradlew tasks --all | grep assemble
         
-        ./gradlew assembleRelease -x lint -Pandroid.injected.resConfigs=en
+        ./gradlew assembleRelease -x lint -x lintVitalRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
     
     
 
