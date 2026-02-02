@@ -202,7 +202,7 @@ jobs:
        sed -i -E \
        '/skipFallback = true,/{
        N
-       s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseSystem",\n    \1/
+       s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
        }' \
        ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
        sed -i -E \
