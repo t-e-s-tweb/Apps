@@ -39,7 +39,12 @@ jobs:
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
-        
+ 
+    - name: Set Swap Space
+      uses: pierotofy/set-swap-space@master
+      with:
+          swap-size-gb: 10
+  
     - name: Enable Gradle flags
       run: |
           sed -i -e '$a\' ${{ github.workspace }}/V2rayNG/gradle.properties
