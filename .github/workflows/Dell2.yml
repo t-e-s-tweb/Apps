@@ -45,8 +45,10 @@ jobs:
         fetch-depth: '0'
     - name: Verify GC
       run: |
-       ./gradlew help \
-       -Dorg.gradle.jvmargs="-XX:+UseParallelGC -Xlog:gc"
+         cd V2rayNG
+         chmod +x gradlew
+         ./gradlew help \
+         -Dorg.gradle.jvmargs="-XX:+UseParallelGC -Xlog:gc"
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
@@ -246,7 +248,7 @@ jobs:
         chmod 755 gradlew
         ./gradlew tasks --all | grep -E 'assemble|lint|abi'
         
-        ./gradlew assembleRelease -PABI_FILTERS=arm64-v8a -x lint -x lintVitalAnalyzeFdroidRelease -x lintVitalAnalyzePlaystoreRelease -x lintVitalReportFdroidRelease -x lintVitalReportPlaystoreRelease -x lintVitalPlaystoreRelease -x lintVitalFdroidRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
+        ./gradlew assembleRelease --build-cache --parallel -PABI_FILTERS=arm64-v8a -x lint -x lintVitalAnalyzeFdroidRelease -x lintVitalAnalyzePlaystoreRelease -x lintVitalReportFdroidRelease -x lintVitalReportPlaystoreRelease -x lintVitalPlaystoreRelease -x lintVitalFdroidRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
     
     
 
