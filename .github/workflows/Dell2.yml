@@ -26,8 +26,7 @@ on:
   push:
     branches:
       - master
-env:
-  GRADLE_OPTS: -XX:+UseParallelGC
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -240,7 +239,7 @@ jobs:
         chmod 755 gradlew
         ./gradlew tasks --all | grep -E 'assemble|lint|abi'
         
-        ./gradlew assembleRelease --parallel -PABI_FILTERS=arm64-v8a -x lint -x lintVitalAnalyzeFdroidRelease -x lintVitalAnalyzePlaystoreRelease -x lintVitalReportFdroidRelease -x lintVitalReportPlaystoreRelease -x lintVitalPlaystoreRelease -x lintVitalFdroidRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
+        ./gradlew assembleRelease -PABI_FILTERS=arm64-v8a -x lint -x lintVitalAnalyzeFdroidRelease -x lintVitalAnalyzePlaystoreRelease -x lintVitalReportFdroidRelease -x lintVitalReportPlaystoreRelease -x lintVitalPlaystoreRelease -x lintVitalFdroidRelease -Pandroid.injected.resConfigs=en,en_PK,en-pk
     
     
 
