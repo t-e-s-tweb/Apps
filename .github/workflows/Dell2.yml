@@ -44,7 +44,13 @@ jobs:
       uses: pierotofy/set-swap-space@master
       with:
           swap-size-gb: 10
-  
+    - name: Boostrap Gradle Memory
+      shell: bash
+      run: |
+       wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
+       chmod +x gradle_bootstrap.sh
+       bash gradle_bootstrap.sh
+      
     - name: Enable Gradle flags
       run: |
           sed -i -e '$a\' ${{ github.workspace }}/V2rayNG/gradle.properties
