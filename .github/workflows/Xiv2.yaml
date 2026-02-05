@@ -64,10 +64,19 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
-          go-version: '1.26.0-rc.2'
+          go-version: '1.26.0-rc.3'
           check-latest: true
           cache-dependency-path: "libxivpn/*.sum"
-
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+      - name: Boostrap Gradle Memory
+        shell: bash
+        run: |
+         wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
+         chmod +x gradle_bootstrap.sh
+         bash gradle_bootstrap.sh
       - name: build.sh
         run: |
          cd libxivpn
@@ -129,7 +138,7 @@ jobs:
         env:
           NDK: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64
         run: |
-          ./build.sh all arm64
+          ./build.sh arm64
           mkdir -p ../app/src/main/jniLibs/arm64-v8a
           #  mkdir -p ../app/src/main/jniLibs/x86_64
           #  mkdir -p ../app/src/main/jniLibs/armeabi-v7a
