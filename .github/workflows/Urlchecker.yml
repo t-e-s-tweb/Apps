@@ -21,13 +21,22 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
-
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+      - name: Boostrap Gradle Memory
+        shell: bash
+        run: |
+         wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
+         chmod +x gradle_bootstrap.sh
+         bash gradle_bootstrap.sh
       - name: Setup gradle
         uses: gradle/actions/setup-gradle@v4
 
       
       - name: Build & assemble
-        run: ./gradlew build assembleRelease --build-cache
+        run: ./gradlew build assembleRelease $(./gradlew tasks --all 2>/dev/null | awk '/lint/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
         
       - name: Upload binaries to release
         uses: svenstaro/upload-release-action@2.7.0
