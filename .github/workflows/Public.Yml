@@ -1,0 +1,14 @@
+name: Public
+
+on:
+  workflow_dispatch:
+
+jobs:
+  change-visibility:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Change Visibility
+        uses: JustinBird/github-visibility-action@main
+        with:
+          visibility: public
+          token: ${{ secrets.ADMINISTRATION_TOKEN }}
