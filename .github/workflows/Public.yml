@@ -1,7 +1,16 @@
-name: Public
+name: Change Repository Visibility
 
 on:
   workflow_dispatch:
+    inputs:
+      visibility:
+        description: 'Set visibility to public or private'
+        required: true
+        default: 'private'
+        type: choice
+        options:
+          - public
+          - private
 
 jobs:
   change-visibility:
@@ -10,5 +19,5 @@ jobs:
       - name: Change Visibility
         uses: JustinBird/github-visibility-action@main
         with:
-          visibility: public
+          visibility: ${{ github.event.inputs.visibility }}
           token: ${{ secrets.ADMINISTRATION_TOKEN }}
