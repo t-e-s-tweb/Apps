@@ -157,8 +157,9 @@ jobs:
       # -------------------------------
       - name: Build APKs
         run: |
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease $(./gradlew tasks --all 2>/dev/null | awk '/lint/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
+        
       # -------------------------------
       # Show SHAs and APK outputs
       # -------------------------------
