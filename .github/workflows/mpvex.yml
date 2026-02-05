@@ -23,7 +23,16 @@ jobs:
           repository: marlboro-advance/mpvEx
           ref: master
           fetch-depth: 0
-
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+           swap-size-gb: 10
+      - name: Boostrap Gradle Memory
+        shell: bash
+        run: |
+         wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
+         chmod +x gradle_bootstrap.sh
+         bash gradle_bootstrap.sh
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
@@ -66,7 +75,7 @@ jobs:
       - name: Build with Gradle
         run: |
          ./gradlew tasks --all | grep -E 'assemble|lint|abi'
-         ./gradlew assembleStandardPreview -x lint -x lintAnalyzeStandardPreviewUnitTest -x lintAnalyzeStandardPreview -x lintStandardPreview -x lintVitalStandardPreview -x updateLintBaseline --build-cache --configuration-cache
+         ./gradlew assembleStandardPreview $(./gradlew tasks --all 2>/dev/null | awk '/lint/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
 
       - name: Publish release
