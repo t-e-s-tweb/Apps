@@ -93,10 +93,11 @@ jobs:
       # -------------------------------
       # Setup Android NDK
       # -------------------------------
-      - uses: nttld/setup-ndk@v1
+      - name: Setup NDK
+        uses: Entertech/setup-ndk@main  # or specific branch/tag
         with:
-          ndk-version: r27d
-          local-cache: true
+         ndk-version: r27
+
       
       # -------------------------------
       # Update xray-core to latest main and compare SHA
