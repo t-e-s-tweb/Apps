@@ -105,39 +105,29 @@ jobs:
       - name: Update xray-core and compare SHA
         run: |
           cd libxivpn
-
-          # XIVPN commit
-          XIVPN_SHA=$(git rev-parse HEAD)
-          echo "xivpn commit: $XIVPN_SHA"
-
-          # Latest xray-core main SHA on GitHub
-          XRAY_REMOTE_SHA=$(git ls-remote https://github.com/xtls/xray-core.git refs/heads/main | cut -f1)
-          echo "Latest xray-core main commit on GitHub: $XRAY_REMOTE_SHA"
-
-          # Update Go module to latest xray-core main
-          go get github.com/xtls/xray-core@main
+          echo "Preparing Go environment..."
+          go env -w GOPRIVATE=github.com/xtls/xray-core
+          go env -w GONOSUMDB=github.com/xtls/xray-core
+          echo "Finding Go module cache path..."
+          MODCACHE=$(go env GOMODCACHE)
+          echo "Module cache path: $MODCACHE"
+          echo "Ensuring xray-core is a full git clone..."
+          MOD_PATH="$MODCACHE/github.com/xtls/xray-core"
+          rm -rf "$MOD_PATH"  # Remove any proxy-downloaded copy
+          XRAY_PATH="$GITHUB_WORKSPACE/_deps/xray-core"
+          rm -rf "$XRAY_PATH"
+        
+          git clone https://github.com/xtls/xray-core.git "$XRAY_PATH"
+          cd "$XRAY_PATH"
+          git checkout main
+          echo "Fetching latest refs from origin..."
+          git fetch origin main
+          wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
+          bash xmuxpatch.sh
+          cd ${{ github.workspace }}/libxivpn
+          go mod edit -replace=github.com/xtls/xray-core="$XRAY_PATH"
           go mod tidy
-
-          # Extract pseudo-version SHA Go will actually use
-          XRAY_LOCAL_PSEUDO=$(go list -m -json github.com/xtls/xray-core | jq -r '.Version')
-          XRAY_LOCAL_SHA=$(echo $XRAY_LOCAL_PSEUDO | awk -F'-' '{print $3}')
-          echo "xray-core pseudo-version SHA used by libxivpn: $XRAY_LOCAL_SHA"
-
-          # Compare SHAs
-          if [ "$XRAY_LOCAL_SHA" = "$XRAY_REMOTE_SHA" ]; then
-            echo "✅ xray-core is up to date"
-          else
-            echo "⚠️ xray-core used by libxivpn is not the latest main commit"
-          fi
-      - name: patch xmux
-        run: |
-            cd libxivpn
-    
-            MOD_PATH=$(go list -m -f '{{.Dir}}' github.com/xtls/xray-core)
-    
-            cd "$MOD_PATH"
-            curl -sL https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh | bash
-
+          go mod download
 
       # -------------------------------
       # Build Android .so libraries
