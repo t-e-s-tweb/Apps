@@ -129,7 +129,11 @@ jobs:
           else
             echo "⚠️ xray-core used by libxivpn is not the latest main commit"
           fi
-
+      - name: patch xmux
+        run: |
+         cd libxivpn
+         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
+         bash xmuxpatch.sh
       # -------------------------------
       # Build Android .so libraries
       # -------------------------------
