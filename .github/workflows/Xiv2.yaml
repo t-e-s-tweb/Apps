@@ -131,7 +131,7 @@ jobs:
           fi
       - name: patch xmux
         run: |
-         MODCACHE=$(go env GOMODCACHE)
+         cd libxivpn
          MOD_PATH=$(go list -m -f  '{{.Dir}}' github.com/xtls/xray-core)
          cd "$MOD_PATH"
          wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
