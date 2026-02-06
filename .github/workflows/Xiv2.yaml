@@ -143,6 +143,7 @@ jobs:
           NDK: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64
         run: |
           ./build.sh arm64
+          go env
           mkdir -p ../app/src/main/jniLibs/arm64-v8a
           #  mkdir -p ../app/src/main/jniLibs/x86_64
           #  mkdir -p ../app/src/main/jniLibs/armeabi-v7a
