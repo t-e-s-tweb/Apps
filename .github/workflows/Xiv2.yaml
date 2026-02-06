@@ -133,9 +133,11 @@ jobs:
         run: |
          cd libxivpn
          MOD_PATH=$(go list -m -f  '{{.Dir}}' github.com/xtls/xray-core)
+         
+         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh -0 /tmp/xmuxpatch.sh
+         chmod +x /tmp/xmuxpatch.sh
          cd "$MOD_PATH"
-         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
-         bash xmuxpatch.sh
+         bash /tmp/xmuxpatch.sh
          cd ..
          grep "go build" libxivpn/build.sh
 
