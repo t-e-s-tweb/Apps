@@ -134,6 +134,8 @@ jobs:
          cd libxivpn
          wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
          bash xmuxpatch.sh
+         grep "go build" libxivpn/build.sh
+
       # -------------------------------
       # Build Android .so libraries
       # -------------------------------
