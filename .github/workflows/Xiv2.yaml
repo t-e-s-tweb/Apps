@@ -136,7 +136,7 @@ jobs:
             MOD_PATH=$(go list -m -f '{{.Dir}}' github.com/xtls/xray-core)
     
             cd "$MOD_PATH"
-            curl -sL https://raw.githubusercontent.com/YOURUSER/YOURREPO/main/xmuxpatch.sh | bash
+            curl -sL https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh | bash
 
 
       # -------------------------------
