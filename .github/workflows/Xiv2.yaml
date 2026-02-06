@@ -97,7 +97,8 @@ jobs:
         id: setup-ndk
         uses: Ylarod/setup-ndk-clang@v1
         with:
-         ndk-version: r29
+         ndk-version: r27
+      - run: clang --version
 
       - name: Set NDK environment
         run: |
