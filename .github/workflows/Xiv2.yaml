@@ -97,6 +97,8 @@ jobs:
         uses: Entertech/setup-ndk@main  # or specific branch/tag
         with:
          ndk-version: r27
+         add-to-path: true
+         local-cache: true
 
       
       # -------------------------------
@@ -134,11 +136,8 @@ jobs:
       # -------------------------------
       - name: Build Android libraries
         working-directory: ./libxivpn
-        env:
-          NDK: ${{ steps.setup-ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64
         run: |
           ./build.sh arm64
-          go env
           mkdir -p ../app/src/main/jniLibs/arm64-v8a
           #  mkdir -p ../app/src/main/jniLibs/x86_64
           #  mkdir -p ../app/src/main/jniLibs/armeabi-v7a
