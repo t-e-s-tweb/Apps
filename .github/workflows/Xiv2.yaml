@@ -132,7 +132,7 @@ jobs:
       - name: patch xmux
         run: |
          MODCACHE=$(go env GOMODCACHE)
-         MOD_PATH="$MODCACHE/github.com/xtls/xray-core"
+         MOD_PATH=$(go list -m -f '{{.Dir}} github.com/xtls/xray-core)
          cd "$MOD_PATH"
          wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh
          bash xmuxpatch.sh
