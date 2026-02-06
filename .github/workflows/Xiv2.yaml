@@ -85,6 +85,9 @@ jobs:
          cd ..
       - name: optimization
         run: |
+          MODCACHE=$(go env GOMODCACHE)
+          MOD_PATH="$MODCACHE/github.com/xtls/xray-core"
+          cd "$MOD_PATH"
           wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/patch.sh
           chmod +x patch.sh
           ./patch.sh
