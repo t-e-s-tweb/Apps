@@ -93,29 +93,10 @@ jobs:
       # -------------------------------
       # Setup Android NDK
       # -------------------------------
-      - name: Setup NDK
-        id: setup-ndk
-        uses: Ylarod/setup-ndk-clang@v1
+      - uses: nttld/setup-ndk@v1
         with:
-         ndk-version: r27d
-      - run: |
-         clang --version
-         echo "=== NDK Outputs ===" echo "clang-path: ${{ steps.setup-ndk.outputs.clang-path }}"
-      - name: Set NDK environment
-        run: |
-         NDK_PATH="${{ steps.setup-ndk.outputs.clang-path }}"
-    
-         # Export for build scripts
-         echo "NDK=$NDK_PATH" >> $GITHUB_ENV
-    
-         # Show all available compilers
-         echo "=== Available clang compilers ==="
-         find "$NDK_PATH" -name "*-clang" -o -name "*-clang++" | sort
-    
-         echo "=== Version check ==="
-         "$NDK_PATH/aarch64-linux-android21-clang" --version 2>/dev/null || true
-
-
+           ndk-version: r27d
+          local-cache: true
       
       # -------------------------------
       # Update xray-core to latest main and compare SHA
