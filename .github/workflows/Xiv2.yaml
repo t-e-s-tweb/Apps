@@ -97,9 +97,10 @@ jobs:
         id: setup-ndk
         uses: Ylarod/setup-ndk-clang@v1
         with:
-         ndk-version: r27
-      - run: clang --version
-
+         ndk-version: r27d
+      - run: |
+         clang --version
+         echo "=== NDK Outputs ===" echo "clang-path: ${{ steps.setup-ndk.outputs.clang-path }}"
       - name: Set NDK environment
         run: |
          NDK_PATH="${{ steps.setup-ndk.outputs.clang-path }}"
