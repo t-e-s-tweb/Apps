@@ -98,7 +98,7 @@ jobs:
         uses: Entertech/setup-ndk@main  # or specific branch/tag
         with:
          ndk-version: r27
-         add-to-path: true
+         add-to-path: false
          local-cache: true
 
       
