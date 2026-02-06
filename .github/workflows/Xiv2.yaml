@@ -93,12 +93,9 @@ jobs:
       # Setup Android NDK
       # -------------------------------
       - name: Setup NDK
-        uses: nttld/setup-ndk@v1
-        id: setup-ndk
+        uses: Ylarod/setup-ndk-clang@v1
         with:
-          add-to-path: false
-          ndk-version: r27
-          local-cache: true
+         ndk-version: r29
       # -------------------------------
       # Update xray-core to latest main and compare SHA
       # -------------------------------
