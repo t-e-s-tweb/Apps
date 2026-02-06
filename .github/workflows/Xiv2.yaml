@@ -95,7 +95,7 @@ jobs:
       # -------------------------------
       - name: Setup NDK
         id: setup-ndk
-        uses: Entertech/setup-ndk@main  # or specific branch/tag
+        uses: nttld/setup-ndk@v1  # or specific branch/tag
         with:
          ndk-version: r27
          add-to-path: false
