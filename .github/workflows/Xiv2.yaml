@@ -134,7 +134,7 @@ jobs:
          cd libxivpn
          MOD_PATH=$(go list -m -f  '{{.Dir}}' github.com/xtls/xray-core)
          
-         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh -0 /tmp/xmuxpatch.sh
+         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh -o /tmp/xmuxpatch.sh
          chmod +x /tmp/xmuxpatch.sh
          cd "$MOD_PATH"
          bash /tmp/xmuxpatch.sh
