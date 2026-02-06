@@ -131,15 +131,13 @@ jobs:
           fi
       - name: patch xmux
         run: |
-         cd libxivpn
-         MOD_PATH=$(go list -m -f  '{{.Dir}}' github.com/xtls/xray-core)
-         
-         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/xmuxpatch.sh -o /tmp/xmuxpatch.sh
-         chmod +x /tmp/xmuxpatch.sh
-         cd "$MOD_PATH"
-         bash /tmp/xmuxpatch.sh
-         cd ..
-         grep "go build" libxivpn/build.sh
+            cd libxivpn
+    
+            MOD_PATH=$(go list -m -f '{{.Dir}}' github.com/xtls/xray-core)
+    
+            cd "$MOD_PATH"
+            curl -sL https://raw.githubusercontent.com/YOURUSER/YOURREPO/main/xmuxpatch.sh | bash
+
 
       # -------------------------------
       # Build Android .so libraries
