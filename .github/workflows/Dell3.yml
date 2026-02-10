@@ -39,9 +39,7 @@ jobs:
         ref: dev
         submodules: 'recursive'
         fetch-depth: '0'
-    - name: Fix minSdkVersion
-      run: |
-        sed -i 's/minSdk = 21/minSdk = 24/g' V2rayNG/app/build.gradle.kts
+  
     # Or for AndroidManifest.xml:
     # sed -i 's/android:minSdkVersion="21"/android:minSdkVersion="24"/g' V2rayNG/app/src/main/AndroidManifest.xml
   
@@ -56,11 +54,6 @@ jobs:
        chmod +x gradle_bootstrap.sh
        bash gradle_bootstrap.sh
       
-    - name: Enable Gradle flags
-      run: |
-          sed -i -e '$a\' ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "android.lint.abortOnError=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3.2.0
@@ -243,7 +236,7 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew clean assembleRelease --no-daemon --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew clean assembleRelease -PminSdk=24 --no-daemon --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
