@@ -35,8 +35,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        repository: 2dust/v2rayNG
-        ref: master
+        repository: lihuu/v2rayNG
+        ref: dev
         submodules: 'recursive'
         fetch-depth: '0'
   
@@ -82,26 +82,27 @@ jobs:
           git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
           git submodule update --init --recursive
 
-    - name: Restore cached libhevtun
-      id: cache-libhevtun-restore
+    
+    - name: Restore cached libtun2socks
+      id: cache-libtun2socks-restore
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
 
-    - name: Build libhevtun
-      if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+    - name: Build libtun2socks
+      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       run: |
-        bash compile-hevtun.sh
+        bash compile-tun2socks.sh
     
-    - name: Save libhevtun
-      if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
+    - name: Save libtun2socks
+      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
+        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
 
-    - name: Copy libhevtun
+    - name: Copy libtun2socks
       run: |
         cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
 
@@ -120,6 +121,12 @@ jobs:
         tag: v26.2.6
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
+    - name: Restore cached libhysteria2
+      id: cache-libhysteria2-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
 
 
   
@@ -128,6 +135,21 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+    - name: Build libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      run: |
+        bash libhysteria2.sh
+
+    - name: Save libhysteria2
+      if: steps.cache-libhysteria2-restore.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/hysteria/libs
+        key: libhysteria2-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
+
+    - name: Copy libhysteria2
+      run: |
+        cp -r ${{ github.workspace }}/hysteria/libs ${{ github.workspace }}/V2rayNG/app
         
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
@@ -154,12 +176,7 @@ jobs:
         else
         echo "Error: No commit found with message 'perf. dns host'"
         fi
-        git remote add config https://github.com/lihuu/v2rayNG.git
-        git fetch config dev
-        git cherry-pick e3d2200e8097d787f5f80ce488e08e99de766a8f || true
-        git cherry-pick 7ea9b94172297609e747e2dd07b7c5257b8e20e6 || true
-        git cherry-pick 268f356b0bb97a53e39bcb3aef544268f13c6f90 || true
-        
+           
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
