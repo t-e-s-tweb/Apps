@@ -52,6 +52,7 @@ jobs:
       run: |
        wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
        chmod +x gradle_bootstrap.sh
+       sed -i '0,/minSdk[[:space:]]*=[[:space:]]*21/s//minSdk = 24/' V2rayNG/app/build.gradle.kts
        bash gradle_bootstrap.sh
       
 
@@ -236,7 +237,7 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew clean assembleRelease -PminSdk=24 --no-daemon --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew clean assembleRelease --no-daemon --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
