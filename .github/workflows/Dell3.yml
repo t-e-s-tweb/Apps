@@ -172,58 +172,37 @@ jobs:
         done
 
     - name: Merge selected Branch into V2rayNG
-      if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' && github.event.inputs.fetch_branches_from_other_v2 != '' }}
+      if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
       run: |
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
     
-        BRANCH_INPUT='${{ github.event.inputs.fetch_branches_from_other_v2 }}'
+        BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
         IFS=',' read -ra EXT_LIST <<< "$BRANCH_INPUT"
     
         for ITEM in "${EXT_LIST[@]}"; do
-         ITEM=$(echo "$ITEM" | xargs)
-         REPO=$(echo "$ITEM" | awk '{print $1}')
-         BRANCH=$(echo "$ITEM" | awk '{print $2}')
+          REPO=$(echo "$ITEM" | awk '{print $1}')
+          BRANCH=$(echo "$ITEM" | awk '{print $2}')
       
-        [[ -z "$REPO" || -z "$BRANCH" ]] && continue
+          echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+          REMOTE_NAME="ext_$(echo "$REPO" | sed 's|/|_|g')"
       
-        REMOTE_NAME="ext_$(echo "$REPO" | tr '/ ' '_')"
+          git remote add "$REMOTE_NAME" "https://github.com/$REPO.git" || true
+          git fetch "$REMOTE_NAME" "$BRANCH"
       
-        git remote remove "$REMOTE_NAME" 2>/dev/null || true
-        git remote add "$REMOTE_NAME" "https://github.com/$REPO.git"
+          echo "Cherry-picking all commits except latest from $REMOTE_NAME/$BRANCH..."
       
-        if ! git fetch "$REMOTE_NAME" "$BRANCH"; then
-          echo "ERROR: Failed to fetch $BRANCH from $REPO"
-          exit 1
-        fi
+          # Skip latest commit (head -n -1), cherry-pick the rest
+          git rev-list --reverse "$REMOTE_NAME/$BRANCH" | head -n -1 | while read commit; do
+            git cherry-pick --no-commit "$commit" || true
+          done
       
-        echo "Merging $REMOTE_NAME/$BRANCH..."
-      
-        # Attempt merge, handle modify/delete conflicts by keeping ours (deleted)
-        if git merge --no-edit "$REMOTE_NAME/$BRANCH"; then
-          echo "Clean merge completed"
-        else
-          echo "Resolving conflicts by keeping ours (deleted files stay deleted)..."
+          git commit -m "Merged all but latest commit from $REPO/$BRANCH" || true
           
-        # Handle modify/delete conflicts: keep ours (deleted)
-        git diff --name-only --diff-filter=U | while read file; do
-          echo "Resolving: $file -> keeping ours (deleted)"
-          git rm "$file" 2>/dev/null || git checkout --ours "$file" && git add "$file"
-        done
-        
-        # Check for remaining conflicts (content conflicts)
-        if git diff --name-only --diff-filter=U | grep -q .; then
-          echo "ERROR: Remaining content conflicts detected:"
-          git diff --name-only --diff-filter=U
-          exit 1
-        fi
-        
-        git commit --no-edit || echo "Nothing to commit"
-        echo "Merge resolved with 'ours' strategy for conflicts"
-        fi
+          echo "Changes from $REMOTE_NAME/$BRANCH:"
+          git log --oneline -5 || true
       
-        git remote remove "$REMOTE_NAME"
         done
 
     - name: Update VPN_MTU in AppConfig.kt
