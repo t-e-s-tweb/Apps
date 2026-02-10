@@ -154,6 +154,12 @@ jobs:
         else
         echo "Error: No commit found with message 'perf. dns host'"
         fi
+        git remote add config https://github.com/lihuu/v2rayNG.git
+        git fetch config dev
+        git cherry-pick e3d2200e8097d787f5f80ce488e08e99de766a8f || true
+        git cherry-pick 7ea9b94172297609e747e2dd07b7c5257b8e20e6 || true
+        git cherry-pick 268f356b0bb97a53e39bcb3aef544268f13c6f90 || true
+        
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
