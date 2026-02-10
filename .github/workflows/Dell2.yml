@@ -245,9 +245,8 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
-        ./gradlew tasks --all | grep -E 'assemble|lint|abi'
         
-        ./gradlew clean assembleRelease --no-daemon --refresh-dependencies --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew clean assembleRelease --no-daemon --refresh-dependencies --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|check|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
