@@ -39,6 +39,11 @@ jobs:
         ref: dev
         submodules: 'recursive'
         fetch-depth: '0'
+    - name: Fix minSdkVersion
+      run: |
+        sed -i 's/minSdk = 21/minSdk = 24/g' V2rayNG/app/build.gradle.kts
+    # Or for AndroidManifest.xml:
+    # sed -i 's/android:minSdkVersion="21"/android:minSdkVersion="24"/g' V2rayNG/app/src/main/AndroidManifest.xml
   
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
