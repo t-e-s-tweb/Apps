@@ -196,7 +196,7 @@ jobs:
         git fetch "$REMOTE_NAME" "$BRANCH"
 
         echo "Merging $REMOTE_NAME/$BRANCH (auto-resolve theirs)..."
-        git merge -X theirs --no-edit "$REMOTE_NAME/$BRANCH" || true
+        git merge -X ours --no-edit "$REMOTE_NAME/$BRANCH" || true
 
         git add -A
         echo "Changes from $REMOTE_NAME/$BRANCH:"
