@@ -184,35 +184,34 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-    
-        BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
+        # Merge branch from another repo if requested
+        if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
+         BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
+        fi
+        if [[ "$BRANCH_INPUT" != "0" ]]; then
         IFS=',' read -ra EXT_LIST <<< "$BRANCH_INPUT"
-    
-        for ITEM in "${EXT_LIST[@]}"; do
-          REPO=$(echo "$ITEM" | awk '{print $1}')
-          BRANCH=$(echo "$ITEM" | awk '{print $2}')
-      
-          echo "Fetching branch '$BRANCH' from repo '$REPO'..."
-          REMOTE_NAME="ext_$(echo "$REPO" | sed 's|/|_|g')"
-      
-          git remote add "$REMOTE_NAME" "https://github.com/$REPO.git" || true
-          git fetch "$REMOTE_NAME" "$BRANCH"
-      
-          echo "Cherry-picking all commits except latest from $REMOTE_NAME/$BRANCH..."
-      
-          # Skip latest commit (head -n -1), cherry-pick the rest
-          git rev-list --reverse "$REMOTE_NAME/$BRANCH" | head -n -1 | while read commit; do
-            git cherry-pick --no-commit "$commit" || true
-          done
-      
-          git commit -m "Merged all but latest commit from $REPO/$BRANCH" || true
-          
-          echo "Changes from $REMOTE_NAME/$BRANCH:"
-          git log --oneline -5 || true
-      
-        done
+         for ITEM in "${EXT_LIST[@]}"; do
+         REPO=$(echo "$ITEM" | awk '{print $1}')
+         BRANCH=$(echo "$ITEM" | awk '{print $2}')
 
-       # - name: test tun
+        echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+
+        # Name remote based on repo to avoid collision
+        REMOTE_NAME="ext_$(echo "$REPO" | sed 's|/|_|g')"
+
+        git remote add "$REMOTE_NAME" "https://github.com/$REPO.git" || true
+        git fetch "$REMOTE_NAME" "$BRANCH"
+
+        echo "Merging $REMOTE_NAME/$BRANCH (auto-resolve theirs)..."
+        git merge -X theirs --no-edit "$REMOTE_NAME/$BRANCH" || true
+
+        git add -A
+        echo "Changes from $REMOTE_NAME/$BRANCH:"
+        git log HEAD~1..HEAD --stat || true
+
+        done
+        fi        
+				# - name: test tun
    #   run: | 
 #         sed -i '/"protocol": "tun"/,/}/ {
      #    /"settings": {/,/}/ {
