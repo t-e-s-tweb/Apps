@@ -35,33 +35,43 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        repository: lihuu/v2rayNG
-        ref: dev
+        repository: 2dust/v2rayNG
+        ref: master
         submodules: 'recursive'
         fetch-depth: '0'
-  
-    # Or for AndroidManifest.xml:
-    # sed -i 's/android:minSdkVersion="21"/android:minSdkVersion="24"/g' V2rayNG/app/src/main/AndroidManifest.xml
   
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
           swap-size-gb: 10
+    
+    - name: patches
+      run: |
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.sh
+        chmod +x *.sh
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/custom-outbound-routing.patch
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/strings.xml%20additions.patch
+        bash apply-patch.sh
+
     - name: Boostrap Gradle Memory
       shell: bash
       run: |
        wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
        chmod +x gradle_bootstrap.sh
-       sed -i '0,/minSdk[[:space:]]*=[[:space:]]*21/s//minSdk = 24/' V2rayNG/app/build.gradle.kts
        bash gradle_bootstrap.sh
       
+    - name: Enable Gradle flags
+      run: |
+          sed -i -e '$a\' ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "android.lint.abortOnError=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
+          echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3.2.0
       with:
         log-accepted-android-sdk-licenses: false
-        cmdline-tools-version: '12266719'
-        packages: 'platforms;android-35 build-tools;35.0.0 platform-tools'
+        cmdline-tools-version: '13114758'
+        packages: 'platforms;android-36.1 build-tools;36.1.0 platform-tools'
 
     - name: Install NDK
       run: |
@@ -81,27 +91,26 @@ jobs:
           git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
           git submodule update --init --recursive
 
-    
-    - name: Restore cached libtun2socks
-      id: cache-libtun2socks-restore
+    - name: Restore cached libhevtun
+      id: cache-libhevtun-restore
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+        key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
 
-    - name: Build libtun2socks
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+    - name: Build libhevtun
+      if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
       run: |
-        bash compile-tun2socks.sh
+        bash compile-hevtun.sh
     
-    - name: Save libtun2socks
-      if: steps.cache-libtun2socks-restore.outputs.cache-hit != 'true'
+    - name: Save libhevtun
+      if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/libs
-        key: libtun2socks-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('.git/modules/badvpn/HEAD') }}-${{ hashFiles('.git/modules/libancillary/HEAD') }}
+        key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
 
-    - name: Copy libtun2socks
+    - name: Copy libhevtun
       run: |
         cp -r ${{ github.workspace }}/libs ${{ github.workspace }}/V2rayNG/app
 
@@ -120,12 +129,6 @@ jobs:
         tag: v26.2.6
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
-    - name: Restore cached libhysteria2
-      id: cache-libhysteria2-restore
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/hysteria/libs
-        key: libhysteria2-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hysteria/HEAD') }}-${{ hashFiles('libhysteria2.sh') }}
 
 
   
@@ -160,7 +163,6 @@ jobs:
         else
         echo "Error: No commit found with message 'perf. dns host'"
         fi
-           
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
@@ -173,7 +175,7 @@ jobs:
           echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
           git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
           echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
-          git merge -X theirs --no-edit pr-$PR_NUM || true
+          git merge --no-edit pr-$PR_NUM || true
           echo "Changes from PR #$PR_NUM:"
           git log HEAD~1..HEAD --stat || true
         done
@@ -210,7 +212,25 @@ jobs:
         git log HEAD~1..HEAD --stat || true
 
         done
-        fi   
+        fi 
+
+    - name: Update VPN_MTU in AppConfig.kt
+      run: |
+       #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+       sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false,\n disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null,\n val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseSystem,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       sed -i -E \
+       '/skipFallback = true,/{
+       N
+       s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
+       }' \
+       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       sed -i -E \
+       '/data class ServersBean\(/,/^\s*\)/ s/(val skipFallback: Boolean\? = null,)/\1\n            val queryStrategy: String? = null,/' \
+       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+   # - name: test tun
    #   run: | 
 #         sed -i '/"protocol": "tun"/,/}/ {
      #    /"settings": {/,/}/ {
@@ -235,7 +255,7 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew clean assembleRelease --no-daemon --no-build-cache -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew assembleRelease --no-daemon -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
