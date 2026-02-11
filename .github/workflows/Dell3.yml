@@ -47,6 +47,7 @@ jobs:
     
     - name: patches
       run: |
+        cd V2rayNG
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.sh
         chmod +x *.sh
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/custom-outbound-routing.patch
