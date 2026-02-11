@@ -47,12 +47,12 @@ jobs:
     
     - name: patches
       run: |
-        cd V2rayNG
+        
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.sh
         chmod +x *.sh
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/custom-outbound-routing.patch
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/strings.xml%20additions.patch
-        bash apply-patch.sh
+        bash apply-patch.sh V2rayNG
 
     - name: Boostrap Gradle Memory
       shell: bash
