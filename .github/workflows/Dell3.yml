@@ -50,10 +50,7 @@ jobs:
         
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.sh
         chmod +x *.sh
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/custom-outbound-routing.patch
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/strings.xml%20additions.patch -O strings.patch
-        git apply custom-outbound-routing.patch
-        git apply strings.patch
+        bash apply-patch.sh
         
 
     - name: Boostrap Gradle Memory
