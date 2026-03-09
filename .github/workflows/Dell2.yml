@@ -35,7 +35,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        repository: 2dust/v2rayNG
+        repository: clcc2019/v2rayNG
         ref: master
         submodules: 'recursive'
         fetch-depth: '0'
