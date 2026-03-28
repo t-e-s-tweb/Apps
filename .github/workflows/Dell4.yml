@@ -141,7 +141,18 @@ jobs:
         
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
-      
+    - name: Commit local modifications before merge
+      run: |
+       cd ${{ github.workspace }}/V2rayNG
+       git config --global user.email "you@example.com"
+       git config --global user.name "Your Name"
+       git add -A
+
+       if ! git diff --cached --quiet; then
+        git commit -m "CI: apply local patches before merge"
+       else
+        echo "No local changes to commit"
+       fi     
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
