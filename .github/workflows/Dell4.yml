@@ -145,11 +145,10 @@ jobs:
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
-        git add -A && git commit -m "work1"
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-
+        git add -A && git commit -m "work1"
         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_v2rayng }}"
         for PR_NUM in "${PR_LIST[@]}"; do
           echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
