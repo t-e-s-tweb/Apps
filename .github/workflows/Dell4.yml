@@ -167,6 +167,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add -A && git commit -m "work2"
         # Merge branch from another repo if requested
         if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
          BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
@@ -199,6 +200,7 @@ jobs:
         cd ${{ github.workspace }}/V2rayNG
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add -A && git commit -m "work3"
         #git remote add DHR60 https://github.com/DHR60/V2rayNG.git
         #echo "Pref dnshost"
         #git fetch DHR60 self_use_build
