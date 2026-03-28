@@ -159,6 +159,8 @@ jobs:
           git log HEAD~1..HEAD --stat || true
         done
 
+        git add -A && git commit
+
     - name: Merge selected Branch into V2rayNG
       if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
       run: |
