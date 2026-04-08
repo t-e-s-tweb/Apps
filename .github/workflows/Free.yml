@@ -13,7 +13,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         repository: MarmadileManteater/FreeTubeAndroid
-        ref: refactor
+        ref: development
         
 
     - name: Use Node.js
