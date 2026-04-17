@@ -77,11 +77,11 @@ jobs:
       with:
           swap-size-gb: 10
     
-    - name: patches
-      run: |
+   # - name: patches
+   #   run: |
         
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.py
-        python3 apply-patch.py
+     #   wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch.py
+     #   python3 apply-patch.py
         
 
     - name: Boostrap Gradle Memory
