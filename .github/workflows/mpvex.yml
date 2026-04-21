@@ -74,7 +74,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-         ./gradlew clean assembleStandardPreview --refresh-dependencies --no-daemon -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+         ./gradlew clean assembleStandardPreview --refresh-dependencies --no-daemon -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
 
       - name: Publish release
