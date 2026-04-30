@@ -84,6 +84,8 @@ jobs:
         python3 apply-patch.py
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch1.py
         python3 apply-patch1.py
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch2.py
+        python3 apply-patch2.py
 
     - name: Boostrap Gradle Memory
       shell: bash
