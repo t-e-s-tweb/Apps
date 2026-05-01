@@ -237,7 +237,7 @@ jobs:
        N
        s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
        }' \
-       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
        sed -i -E \
        '/data class ServersBean\(/,/^\s*\)/ s/(val skipFallback: Boolean\? = null,)/\1\n            val queryStrategy: String? = null,/' \
        ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
