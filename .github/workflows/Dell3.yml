@@ -77,18 +77,7 @@ jobs:
       with:
           swap-size-gb: 10
     
-    - name: patches
-      run: |
-        
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py
-        python3 unified.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
-        #python3 unified1.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch2.py
-        #ython3 apply-patch2.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch3.py
-        #python3 apply-patch3.py
-
+    
     - name: Boostrap Gradle Memory
       shell: bash
       run: |
@@ -222,6 +211,16 @@ jobs:
 
         done
         fi 
+    - name: patches
+      run: |  
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py
+        python3 unified.py
+        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
+        #python3 unified1.py
+        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch2.py
+        #ython3 apply-patch2.py
+        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch3.py
+        #python3 apply-patch3.py
 
     - name: Update VPN_MTU in AppConfig.kt
       run: |
