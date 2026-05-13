@@ -1,0 +1,86 @@
+name: kiss
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ new ]
+  pull_request:
+    branches: [ new ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: LukeXeon/adocker
+          ref: main
+      - run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add .
+    
+         # sed -i 's/8\.0/7.5/g' gradle/wrapper/gradle-wrapper.properties
+        #  sed -i 's/8\.1\.4/7.4.2/g' build.gradle
+     # - name: Fetch Pull Request Branch
+       # run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2285/merge
+     # - name: Merge Commits
+      #  run: |
+          # Merge specific commits from the pull request
+        #  git merge FETCH_HEAD --strategy-option=theirs --allow-unrelated-histories
+     # - name: Fetch Pull Request Branch
+     #   run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2251/merge
+    #  - name: Merge Commits
+      #  run: |
+          # Merge specific commits from the pull request
+      #    git merge FETCH_HEAD --allow-unrelated-histories
+    #  - name: Fetch Pull Request Branch
+    #    run: git fetch https://github.com/Neamar/KISS.git +refs/pull/2252/merge
+    #  - name: Merge Commits
+     #   run: |
+          # Merge specific commits from the pull request
+       #   git merge FETCH_HEAD --allow-unrelated-histories
+      
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run:  chmod +x gradlew
+      
+      - name: Build with Gradle
+        run: ./gradlew assembleRelease --stacktrace
+
+    #  - name: Upload APK
+    #    uses: actions/upload-artifact@v3
+    #    with:
+     #     name: KISS
+       #   path: app/build/outputs/apk/release/*.apk
+      - name: Upload binaries to release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: app/build/outputs/apk/release/*.apk
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
+      - name: Archive reports for failed job
+        uses: actions/upload-artifact@v3
+        with:
+          name: reports
+          path: '*/build/reports'
+        if: ${{ failure() }}
