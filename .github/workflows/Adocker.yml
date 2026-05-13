@@ -78,9 +78,4 @@ jobs:
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
-      - name: Archive reports for failed job
-        uses: actions/upload-artifact@v3
-        with:
-          name: reports
-          path: '*/build/reports'
-        if: ${{ failure() }}
+     
