@@ -213,7 +213,7 @@ jobs:
         fi 
     - name: patches
       run: |  
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py
+        wget -O unified.py https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py?cachebust=$(date +%s)"
         python3 unified.py
         #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
         #python3 unified1.py
