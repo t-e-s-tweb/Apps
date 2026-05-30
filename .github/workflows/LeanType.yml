@@ -89,18 +89,12 @@ jobs:
       - name: Build with Gradle
         run: ./gradlew assembleRelease -PABI_FILTERS="${ABI_FILTERS}" $(./gradlew tasks --all 2>/dev/null | awk '/lint/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
 
-      - name: Upload binaries to release
-        uses: svenstaro/upload-release-action@2.7.0
+      
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
         with:
-          repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: app/build/outputs/apk/release/*.apk
-          tag: leantype
-          overwrite: true
-          file_glob: true
-          
-      - name: Archive reports for failed job
-        if: ${{ failure() }}
-        uses: actions/upload-artifact@v4
-        with:
-          name: reports
-          path: '*/build/reports'
+          tag_name: leantype
+          name: leantype
+          prerelease: false
+          draft: false
+          files: "**/*.apk"
