@@ -51,7 +51,7 @@ jobs:
         #echo "Pref dnshost"
         #git fetch DHR60 self_use_build
         #git cherry-pick 6ce76ce4b3665ac60cb1fab42620c85afc1e66ff || true
-
+        git merge --abort
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
         git fetch DHR60 self_use_build
 
@@ -265,7 +265,7 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew clean assembleRelease -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew assembleRelease -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
