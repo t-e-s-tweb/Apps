@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          repository: LeanBitLab/LeanType
+          repository: AsafMah/LeanType
           # Checkout the branch being built, not always main
           ref: main
           submodules: 'recursive'
