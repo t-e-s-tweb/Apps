@@ -19,7 +19,7 @@ jobs:
         with:
           repository: AsafMah/LeanType
           # Checkout the branch being built, not always main
-          ref: main
+          ref: merge/upstream-v3.8.8
           submodules: 'recursive'
           fetch-depth: '0'
       - name: Enable Gradle caching
