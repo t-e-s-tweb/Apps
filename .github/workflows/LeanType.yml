@@ -42,8 +42,8 @@ jobs:
          wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
          chmod +x gradle_bootstrap.sh
          bash gradle_bootstrap.sh
-      - name: Disable abortOnError in lint
-        run: sed -i 's/abortOnError = true/abortOnError = false/' "${{ github.workspace }}/app/build.gradle.kts"
+     # - name: Disable abortOnError in lint
+    #    run: sed -i 's/abortOnError = true/abortOnError = false/' "${{ github.workspace }}/app/build.gradle.kts"
         
       - name: Copy only changed files from selected PRs into Heli
         if: ${{ github.event.inputs.merge_prs_heli != '0' }}
@@ -87,7 +87,7 @@ jobs:
     #    run: sed -i "s/abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'/abiFilters 'arm64-v8a'/" app/build.gradle
         
       - name: Build with Gradle
-        run: ./gradlew assembleRelease -PABI_FILTERS="${ABI_FILTERS}" $(./gradlew tasks --all 2>/dev/null | awk '/lint/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
+        run: ./gradlew assembleRelease --build-cache --no-daemon --parallel -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
 
       
       - name: Publish release
