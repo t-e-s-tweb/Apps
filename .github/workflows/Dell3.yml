@@ -55,23 +55,8 @@ jobs:
         git remote add DHR60 https://github.com/DHR60/V2rayNG.git
         git fetch DHR60 self_use_build
 
-        DNS_HOST_SHA=$(git log DHR60/self_use_build --grep="perf. dns host" --format="%H" -n 1)
-
-        if [ -n "$DNS_HOST_SHA" ]; then
-         echo "Found commit: $DNS_HOST_SHA"
-         git cherry-pick $DNS_HOST_SHA || true
-        else
-        echo "Error: No commit found with message 'perf. dns host'"
-        fi
-
-        PARALLEL=$(git log DHR60/self_use_build --grep="Add DNS Parallel Query support" --format="%H" -n 1)
-
-        if [ -n "$" ]; then
-         echo "Found commit: $PARALLEL"
-         git cherry-pick $PARALLEL || true
-        else
-        echo "Error: No commit found with message 'Add DNS Parallel Query support'"
-        fi
+        git cherry-pick f9c3e6aff792f22c9e94b4692adfaec3d247f20c || true
+        git cherry-pick 68abeb40eccc25bea90eb68d4cff5306f29bf3db || true
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
