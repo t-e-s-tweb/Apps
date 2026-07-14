@@ -128,7 +128,7 @@ jobs:
         popd
 
     - name: Download libv2ray
-      uses: robinraju/release-downloader@v1.12
+      uses: robinraju/release-downloader@v1.13
       with:
         repository: 't-e-s-tweb/AndroidLibXLite'
         tag: v26.6.27
