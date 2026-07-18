@@ -42,13 +42,13 @@ jobs:
 
 
     
+   
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
           swap-size-gb: 10
     
     
-
     - name: Boostrap Gradle Memory
       shell: bash
       run: |
@@ -56,28 +56,23 @@ jobs:
        chmod +x gradle_bootstrap.sh
        bash gradle_bootstrap.sh
       
-    - name: Enable Gradle flags
-      run: |
-          sed -i -e '$a\' ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "android.lint.abortOnError=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
-          echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/V2rayNG/gradle.properties
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3.2.0
+      uses: android-actions/setup-android@v4
       with:
         log-accepted-android-sdk-licenses: false
-        cmdline-tools-version: '13114758'
-        packages: 'platforms;android-36.1 build-tools;36.1.0 platform-tools'
+        cmdline-tools-version: '14742923'
+        packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
 
     - name: Install NDK
       run: |
         echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
           --channel=0 \
-          --install "ndk;28.2.13676358"
-        echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+          --install "ndk;29.0.14206865"
+        echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
         sed -i '10i\
         \
-            ndkVersion = "28.2.13676358"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
 
     - name: specify hevtun version
       run: |
@@ -89,7 +84,7 @@ jobs:
 
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ github.workspace }}/libs
         key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
@@ -101,7 +96,7 @@ jobs:
     
     - name: Save libhevtun
       if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: ${{ github.workspace }}/libs
         key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
@@ -119,10 +114,10 @@ jobs:
         popd
 
     - name: Download libv2ray
-      uses: robinraju/release-downloader@v1.12
+      uses: robinraju/release-downloader@v1.13
       with:
         repository: 't-e-s-tweb/AndroidLibXLite'
-        tag: v26.3.27
+        tag: v26.6.27
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
 
@@ -136,18 +131,14 @@ jobs:
         
     - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v5
-    - name: Commit local modifications before merge
-      run: |
-       cd ${{ github.workspace }}/V2rayNG
-       git config --global user.email "you@example.com"
-       git config --global user.name "Your Name"
-       git add -A
+    - name: Cache Gradle build cache
+      uses: actions/cache@v4
+      with:
+          path: ~/.gradle/caches/build-cache-*
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-build-cache-${{ runner.os }}-
 
-       if ! git diff --cached --quiet; then
-        git commit -m "CI: apply local patches before merge"
-       else
-        echo "No local changes to commit"
-       fi     
+      
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
       run: |
@@ -198,25 +189,25 @@ jobs:
 
         done
         fi 
-        
-    - name: Update VPN_MTU in AppConfig.kt
-      run: |
+    
+    #- name: Update VPN_MTU in AppConfig.kt
+      #run: |
        #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
-       sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       #sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
        #sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false,\n disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-       sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       #sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
        #sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null,\n val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
-       sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       #sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
        #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseSystem,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-       sed -i -E \
-       '/skipFallback = true,/{
-       N
-       s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
-       }' \
-       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
-       sed -i -E \
-       '/data class ServersBean\(/,/^\s*\)/ s/(val skipFallback: Boolean\? = null,)/\1\n            val queryStrategy: String? = null,/' \
-       ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       #sed -i -E \
+       #'/skipFallback = true,/{
+       #N
+       #s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
+       #}' \
+       #${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
+       #sed -i -E \
+       #'/data class ServersBean\(/,/^\s*\)/ s/(val skipFallback: Boolean\? = null,)/\1\n            val queryStrategy: String? = null,/' \
+       #${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
    # - name: test tun
    #   run: | 
 #         sed -i '/"protocol": "tun"/,/}/ {
@@ -242,7 +233,7 @@ jobs:
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew assembleRelease --no-daemon -PABI_FILTERS=arm64-v8a -x check $(./gradlew tasks --all 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew assembleRelease --build-cache --no-daemon --parallel -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
