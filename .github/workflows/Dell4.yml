@@ -225,7 +225,7 @@ jobs:
     - name: Refactor package name
       run: |
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
-        python3 unified1.py ${{ github.workspace }}/V2rayNG  
+        python3 unified1.py ${{ github.workspace }}/
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
