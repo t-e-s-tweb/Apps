@@ -1,0 +1,105 @@
+name: Android CI/CD
+
+on:
+  workflow_dispatch: 
+    inputs:
+      fetch_branches_from_other_v2:
+        description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
+        required: false
+        default: '0'
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: A-EDev/Flow
+          ref: main
+          submodules: 'recursive'
+          fetch-depth: '0'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      # Explicit Gradle cache on top of setup-java's built-in cache.
+      # Caches the build-cache directory so incremental tasks are skipped.
+      - name: Cache Gradle build cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.gradle/caches/build-cache-*
+          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml', '**/gradle-wrapper.properties') }}
+          restore-keys: gradle-build-cache-${{ runner.os }}-
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+
+      - name: Merge selected Branch into V2rayNG
+        if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
+        run: |
+          cd ${{ github.workspace }}/V2rayNG
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+          if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
+           BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
+          fi
+          if [[ "$BRANCH_INPUT" != "0" ]]; then
+          IFS=',' read -ra EXT_LIST <<< "$BRANCH_INPUT"
+           for ITEM in "${EXT_LIST[@]}"; do
+           REPO=$(echo "$ITEM" | awk '{print $1}')
+           BRANCH=$(echo "$ITEM" | awk '{print $2}')
+
+          echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+
+        
+          REMOTE_NAME="ext_$(echo "$REPO" | sed 's|/|_|g')"
+
+          git remote add "$REMOTE_NAME" "https://github.com/$REPO.git" || true
+          git fetch "$REMOTE_NAME" "$BRANCH"
+
+          echo "Merging $REMOTE_NAME/$BRANCH (auto-resolve theirs)..."
+          git merge -X theirs --no-edit "$REMOTE_NAME/$BRANCH" || true
+
+          git add -A
+          echo "Changes from $REMOTE_NAME/$BRANCH:"
+          git log HEAD~1..HEAD --stat || true
+
+          done
+          fi    
+      
+      
+      # Build all variants in a single Gradle invocation so tasks share the
+      # configuration phase, classpath resolution and incremental build cache.
+      # --parallel  — lets Gradle run independent subproject tasks concurrently.
+      # --build-cache — reuses outputs from previous runs stored above.
+      # --no-daemon  — avoids daemon startup overhead inside the ephemeral runner.
+      - name: Build all APKs
+        run: >
+          ./gradlew assembleGithubNightly
+          --parallel --build-cache --no-daemon --stacktrace
+          
+
+    
+      - name: Upload Nightly APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: flow-nightly-apk
+          path: |
+            app/build/outputs/apk/github/nightly/app-github-nightly.apk
+            app/build/outputs/apk/github/nightly/app-github-nightly.apk.sha256
+          if-no-files-found: error
+          retention-days: 14
+
+      
+ 
