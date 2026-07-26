@@ -47,7 +47,7 @@ jobs:
       - name: Merge selected Branch into V2rayNG
         if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
         run: |
-          cd ${{ github.workspace }}/V2rayNG
+          cd ${{ github.workspace }}/Flow
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
         
