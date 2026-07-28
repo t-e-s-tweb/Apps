@@ -18,11 +18,7 @@ on:
         description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
         required: false
         default: '0'
-      hevtun_commit_id:
-        description: "指定HevTun使用commit id版本"
-        required: true
-        default: "HEAD~0"
-        type: string
+      
   push:
     branches:
       - master
@@ -74,13 +70,7 @@ jobs:
         \
             ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
 
-    - name: specify hevtun version
-      run: |
-          cd ${{ github.workspace }}/hev-socks5-tunnel
-          git fetch --all
-          git pull origin main
-          git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
-          git submodule update --init --recursive
+      
 
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
