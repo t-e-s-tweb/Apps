@@ -21,6 +21,7 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          cache: gradle
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
@@ -32,7 +33,7 @@ jobs:
          chmod +x gradle_bootstrap.sh
          bash gradle_bootstrap.sh
       - name: Setup gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
 
       
       - name: Build & assemble
