@@ -93,8 +93,7 @@ jobs:
         with:
           name: flow-nightly-apk
           path: |
-            app/build/outputs/apk/github/nightly/app-github-nightly.apk
-            app/build/outputs/apk/github/nightly/app-github-nightly.apk.sha256
+            app/build/outputs/apk/github/nightly/*.apk
           if-no-files-found: error
           retention-days: 14
 
