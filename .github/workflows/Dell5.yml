@@ -31,7 +31,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        repository: eliotcougar/v2rayNG/
+        repository: eliotcougar/v2rayNG
         ref: codex/all-features-test-build
         submodules: 'recursive'
         fetch-depth: '0'
