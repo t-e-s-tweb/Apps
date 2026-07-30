@@ -1,4 +1,4 @@
-name: MPVEx
+name: MPVRx
 
 permissions:
   contents: write
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
         with:
-          repository: marlboro-advance/mpvEx
+          repository: Riteshp2001/mpvRx
           ref: master
           fetch-depth: 0
       - name: Set Swap Space
@@ -53,35 +53,26 @@ jobs:
           echo "android.lint.abortOnError=false" >> ${{ github.workspace }}/gradle.properties
           echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/gradle.properties
 
-      - name: armv8
-        run: |
-          sed -i 's/val volumeGestureSens = 0\.017f/val volumeGestureSens = 0.3f/' \
-          app/src/main/java/app/marlboroadvance/mpvex/ui/player/controls/GestureHandler.kt
-
-          sed -i.bak '/ndk {/,/}/d' app/build.gradle.kts
-
-          sed -i.bak -E \
-          -e 's/include\([^)]+\)/include("arm64-v8a")/' \
-          -e 's/isUniversalApk\s*=\s*true/isUniversalApk = false/' \
-          app/build.gradle.kts
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-         cache-disabled: true
+         cache-disabled: false
+         cache-overwrite: true
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
       - name: Build with Gradle
         run: |
-         ./gradlew clean assembleStandardPreview --refresh-dependencies --no-daemon -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+         ./gradlew assembleStandardRelease --build-cache --parallel -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+
 
 
       - name: Publish release
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: mpvEx
-          name: mpvEx
+          tag_name: mpvRx
+          name: mpvRx
           prerelease: false
           draft: false
           files: "**/*.apk"
