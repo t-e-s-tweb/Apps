@@ -31,8 +31,8 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v5
       with:
-        repository: 2dust/v2rayNG
-        ref: master
+        repository: eliotcougar/v2rayNG/
+        ref: codex/all-features-test-build
         submodules: 'recursive'
         fetch-depth: '0'
 
@@ -150,7 +150,7 @@ jobs:
         
         git config user.name "github-actions[bot]"
         git config user.email "github-actions[bot]@users.noreply.github.com"
-        git stash
+        
         # Merge branch from another repo if requested
         if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
          BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
@@ -175,7 +175,7 @@ jobs:
         git add -A
         echo "Changes from $REMOTE_NAME/$BRANCH:"
         git log HEAD~1..HEAD --stat || true
-        git stash pop
+        
 
         done
         fi 
