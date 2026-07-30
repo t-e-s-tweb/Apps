@@ -34,7 +34,7 @@ jobs:
          chmod +x gradle_bootstrap.sh
          bash gradle_bootstrap.sh
       - name: Setup JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: 'adopt'
           java-version: 17
@@ -54,10 +54,10 @@ jobs:
           echo "android.lint.checkReleaseBuilds=false" >> ${{ github.workspace }}/gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
          cache-disabled: false
-         cache-overwrite: true
+         cache-overwrite-existing: true
 
       - name: Make gradlew executable
         run: chmod +x ./gradlew
