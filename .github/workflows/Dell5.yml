@@ -18,11 +18,7 @@ on:
         description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
         required: false
         default: '0'
-      hevtun_commit_id:
-        description: "指定HevTun使用commit id版本"
-        required: true
-        default: "HEAD~0"
-        type: string
+      
   push:
     branches:
       - master
@@ -42,23 +38,13 @@ jobs:
 
 
     
+   
     - name: Set Swap Space
       uses: pierotofy/set-swap-space@master
       with:
           swap-size-gb: 10
     
-    - name: patches
-      run: |
-        
-        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py
-        python3 unified.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
-        #python3 unified1.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch2.py
-        #ython3 apply-patch2.py
-        #wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/apply-patch3.py
-        #python3 apply-patch3.py
-
+    
     - name: Boostrap Gradle Memory
       shell: bash
       run: |
@@ -68,33 +54,27 @@ jobs:
       
 
     - name: Setup Android SDK
-      uses: android-actions/setup-android@v3.2.0
+      uses: android-actions/setup-android@v4
       with:
         log-accepted-android-sdk-licenses: false
-        cmdline-tools-version: '13114758'
-        packages: 'platforms;android-36.1 build-tools;36.1.0 platform-tools'
+        cmdline-tools-version: '14742923'
+        packages: 'platforms;android-37.0 build-tools;37.0.0 platform-tools'
 
     - name: Install NDK
       run: |
         echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager \
           --channel=0 \
-          --install "ndk;28.2.13676358"
-        echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> $GITHUB_ENV
+          --install "ndk;29.0.14206865"
+        echo "NDK_HOME=$ANDROID_HOME/ndk/29.0.14206865" >> $GITHUB_ENV
         sed -i '10i\
         \
-            ndkVersion = "28.2.13676358"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
+            ndkVersion = "29.0.14206865"' ${{ github.workspace }}/V2rayNG/app/build.gradle.kts
 
-    - name: specify hevtun version
-      run: |
-          cd ${{ github.workspace }}/hev-socks5-tunnel
-          git fetch --all
-          git pull origin main
-          git checkout --force --quiet ${{ inputs.hevtun_commit_id }}
-          git submodule update --init --recursive
+      
 
     - name: Restore cached libhevtun
       id: cache-libhevtun-restore
-      uses: actions/cache/restore@v4
+      uses: actions/cache/restore@v5
       with:
         path: ${{ github.workspace }}/libs
         key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
@@ -106,7 +86,7 @@ jobs:
     
     - name: Save libhevtun
       if: steps.cache-libhevtun-restore.outputs.cache-hit != 'true'
-      uses: actions/cache/save@v4
+      uses: actions/cache/save@v5
       with:
         path: ${{ github.workspace }}/libs
         key: libhevtun-${{ runner.os }}-${{ env.NDK_HOME }}-${{ hashFiles('.git/modules/hev-socks5-tunnel/HEAD') }}-${{ hashFiles('compile-hevtun.sh') }}
@@ -124,10 +104,10 @@ jobs:
         popd
 
     - name: Download libv2ray
-      uses: robinraju/release-downloader@v1.12
+      uses: robinraju/release-downloader@v1.13
       with:
         repository: 't-e-s-tweb/AndroidLibXLite'
-        tag: v26.5.3
+        tag: v26.7.28
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
 
@@ -138,9 +118,13 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '21'
+        cache: gradle
         
     - name: Setup Gradle
-      uses: gradle/actions/setup-gradle@v5
+      uses: gradle/actions/setup-gradle@v6
+      with:
+        cache-overwrite-existing: true
+   
       
     - name: Merge selected PRs into V2rayNG
       if: ${{ github.event.inputs.merge_prs_v2rayng != '0' }}
@@ -192,9 +176,26 @@ jobs:
 
         done
         fi 
-
+    
     #- name: Update VPN_MTU in AppConfig.kt
-      # - name: test tun
+      #run: |
+       #sed -i 's/const val VPN_MTU = 1500/const val VPN_MTU = 8500/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/AppConfig.kt
+       #sed -i -E 's/(address = "fakedns"),/\1/; s/domains = geositeCn\.plus\(proxyDomain\)\.plus\(directDomain\)//' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
+       #sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    serveStale = true,\n    serveExpiredTTL = 0,\n    enableParallelQuery = false,\n disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       #sed -i -E 's/([[:space:]]*tag = AppConfig\.TAG_DNS)/\1,\n    disableFallbackIfMatch = true/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
+       #sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val serveStale: Boolean? = null,\n    val serveExpiredTTL: Int? = null,\n    val enableParallelQuery: Boolean? = null,\n val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       #sed -i -E '/data class DnsBean\(/,/^\s*\)/ s/(\s*val tag: String\? = null)/\1,\n    val disableFallbackIfMatch: Boolean? = null/' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+       #sed -i -E '/skipFallback = true,/{:a;N;/tag = AppConfig\.TAG_DOMESTIC_DNS/ {s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = UseSystem,\n    \1/}; ba}' ${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/handler/V2rayConfigManager.kt
+       #sed -i -E \
+       #'/skipFallback = true,/{
+       #N
+       #s/(tag = AppConfig\.TAG_DOMESTIC_DNS)/queryStrategy = "UseIPv4",\n    \1/
+       #}' \
+       #${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/core/CoreConfigManager.kt
+       #sed -i -E \
+       #'/data class ServersBean\(/,/^\s*\)/ s/(val skipFallback: Boolean\? = null,)/\1\n            val queryStrategy: String? = null,/' \
+       #${{ github.workspace }}/V2rayNG/app/src/main/java/com/v2ray/ang/dto/V2rayConfig.kt
+   # - name: test tun
    #   run: | 
 #         sed -i '/"protocol": "tun"/,/}/ {
      #    /"settings": {/,/}/ {
@@ -209,17 +210,16 @@ jobs:
     #     }' ${{ github.workspace }}/V2rayNG/app/src/main/assets/v2ray_config_with_tun.json
 
     - name: Refactor package name
-      if: ${{ github.event.inputs.clear_path != '0' }}
       run: |
-        wget https://raw.githubusercontent.com/t-e-s-tweb/rules/refs/heads/master/scripts/refactor_package.py
-        python3 refactor_package.py    
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
+        #python3 unified1.py ${{ github.workspace }}/
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
-        ./gradlew assembleRelease --no-daemon -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        ./gradlew assembleRelease --build-cache --no-daemon --parallel -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
     
     
