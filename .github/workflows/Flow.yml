@@ -35,6 +35,8 @@ jobs:
       # Caches the build-cache directory so incremental tasks are skipped.
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
+        with:
+         cache-overwrite-existing: true
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
