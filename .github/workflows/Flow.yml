@@ -89,10 +89,10 @@ jobs:
 
           
       - name: Publish release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v3
         with:
-          tag_name: Flow
-          name: Flow
+          tag_name: flow
+          name: flow
           prerelease: false
           draft: false
           files: "**/*.apk"
