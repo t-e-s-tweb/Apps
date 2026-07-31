@@ -64,7 +64,7 @@ jobs:
 
       - name: Build with Gradle
         run: |
-         ./gradlew assembleStandardRelease --build-cache --parallel -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+         ./gradlew assembleStandardRelease --build-cache --parallel -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
 
 
