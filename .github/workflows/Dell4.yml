@@ -218,11 +218,6 @@ jobs:
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
-        git config user.name "github-actions[bot]"
-        git config user.email "github-actions[bot]@users.noreply.github.com"
-        git remote add dhr60 https://github.com/DHR60/v2rayNG.git
-        git fetch dhr60 self_use_build
-        git cherry-pick 4ce36c076237c6e08be03c5a652f320559a2ebe6
         echo "sdk.dir=${ANDROID_HOME}" > local.properties
         chmod 755 gradlew
         
