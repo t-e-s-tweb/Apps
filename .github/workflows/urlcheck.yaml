@@ -56,6 +56,8 @@ jobs:
            ~/.gradle/wrapper
            ~/.gradle/notifications
            ~/.gradle/configuration-cache
+           **/.gradle/configuration-cache
+           **/.gradle/caches
          key: ${{ runner.os }}-gradleurl-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
          restore-keys: |
             ${{ runner.os }}-gradleurl-
