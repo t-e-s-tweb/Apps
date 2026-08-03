@@ -36,7 +36,21 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
-         cache-overwrite-existing: true
+         cache-overwrite-existing: tru
+         cache-disabled: true
+      - name: cache
+        uses: actions/cache@v6
+        with:
+         path: |
+           ~/.gradle/caches
+           ~/.gradle/wrapper
+           ~/.gradle/notifications
+           ~/.gradle/configuration-cache
+           **/.gradle/configuration-cache
+           **/.gradle/caches
+         key: ${{ runner.os }}-gradleflow-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+         restore-keys: |
+            ${{ runner.os }}-gradleflow-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
