@@ -48,6 +48,8 @@ jobs:
         with:
           cache-overwrite-existing: true
           cache-encryption-key: ${{ secrets.GRADLE_ENCRYPTION_KEY }}
+          gradle-home-cache-includes: |
+             configuration-cache
 
       
       - name: Build & assemble
