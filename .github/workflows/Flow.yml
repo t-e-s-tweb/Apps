@@ -85,7 +85,7 @@ jobs:
       - name: Build all APKs
         run: >
           ./gradlew assembleGithubRelease
-          --parallel --build-cache --configuration-cache -Pandroid.enableR8.fullMode=true -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+           --no-daemon --parallel --build-cache --configuration-cache -Pandroid.enableR8.fullMode=true -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
           
       - name: Publish release
