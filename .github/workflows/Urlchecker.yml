@@ -18,7 +18,7 @@ jobs:
           ref: master
       - name: Enable Gradle caching
         run: |
-         cat >> ${{ github.workspace }}/V2rayNG/gradle.properties << EOF
+         cat >> ${{ github.workspace }}/gradle.properties << EOF
          org.gradle.caching=true
          org.gradle.configuration-cache=true
          org.gradle.configuration-cache.problems=warn
