@@ -102,7 +102,9 @@ jobs:
     #    run: sed -i "s/abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'/abiFilters 'arm64-v8a'/" app/build.gradle
         
       - name: Build with Gradle
-        run: ./gradlew assembleofflineliteRelease --no-daemon --parallel --build-cache --configuration-cache -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
+        run: |
+         sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*true/isMinifyEnabled = false/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*true/isShrinkResources = false/g' app/build.gradle.kts
+         ./gradlew assembleofflineliteRelease --no-daemon --parallel --build-cache --configuration-cache -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
 
       
       - name: Publish release
