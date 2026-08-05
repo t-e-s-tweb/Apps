@@ -76,7 +76,7 @@ jobs:
            ~/.gradle/configuration-cache
            **/.gradle/configuration-cache
            **/.gradle/caches
-         key: ${{ runner.os }}-gradlelibret-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+         key: ${{ runner.os }}-gradlelibret-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/.gradle/configuration-cache') }}
          restore-keys: |
             ${{ runner.os }}-gradlelibret-
       
