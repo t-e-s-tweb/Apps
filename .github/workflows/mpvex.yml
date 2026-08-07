@@ -38,7 +38,7 @@ jobs:
         with:
           distribution: 'adopt'
           java-version: 17
-          cache: gradle
+          
       - name: Enable Gradle caching
         run: |
           echo "" >> ${{ github.workspace }}/gradle.properties
