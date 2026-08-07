@@ -1,8 +1,12 @@
-name: flow app
+name: Android CI/CD
 
 on:
-  workflow_dispatch:
-
+  workflow_dispatch: 
+    inputs:
+      fetch_branches_from_other_v2:
+        description: 'Enter v2 "username/repo branch" to fetch & merge, or 0 for none'
+        required: false
+        default: '0'
 permissions:
   contents: write
 
@@ -15,10 +19,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-         repository: A-EDev/Flow
-         ref: main
-         submodules: 'recursive'
-         fetch-depth: '0'
+          repository: A-EDev/Flow
+          ref: main
+          submodules: 'recursive'
+          fetch-depth: '0'
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -29,34 +33,82 @@ jobs:
 
       # Explicit Gradle cache on top of setup-java's built-in cache.
       # Caches the build-cache directory so incremental tasks are skipped.
-      - name: Cache Gradle build cache
-        uses: actions/cache@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v6
         with:
-          path: ~/.gradle/caches/build-cache-*
-          key: gradle-build-cache-${{ runner.os }}-${{ hashFiles('**/*.gradle.kts', '**/libs.versions.toml', '**/gradle-wrapper.properties') }}
-          restore-keys: gradle-build-cache-${{ runner.os }}-
+         cache-overwrite-existing: true
+         cache-disabled: true
+      - name: cache
+        uses: actions/cache@v6
+        with:
+         path: |
+           ~/.gradle/caches
+           ~/.gradle/wrapper
+           ~/.gradle/notifications
+           ~/.gradle/configuration-cache
+           **/.gradle/configuration-cache
+           **/.gradle/caches
+         key: ${{ runner.os }}-gradleflow-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/.gradle/configuration-cache') }}
+         restore-keys: |
+            ${{ runner.os }}-gradleflow-
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-          #    run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
 
+      - name: Merge selected Branch into V2rayNG
+        if: ${{ github.event.inputs.fetch_branches_from_other_v2 != '0' }}
+        run: |
+          cd ${{ github.workspace }}/
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+          if [ "${{ github.event.inputs.fetch_branches_from_other_v2 }}" != "0" ]; then
+           BRANCH_INPUT="${{ github.event.inputs.fetch_branches_from_other_v2 }}"
+          fi
+          if [[ "$BRANCH_INPUT" != "0" ]]; then
+          IFS=',' read -ra EXT_LIST <<< "$BRANCH_INPUT"
+           for ITEM in "${EXT_LIST[@]}"; do
+           REPO=$(echo "$ITEM" | awk '{print $1}')
+           BRANCH=$(echo "$ITEM" | awk '{print $2}')
+
+          echo "Fetching branch '$BRANCH' from repo '$REPO'..."
+
+        
+          REMOTE_NAME="ext_$(echo "$REPO" | sed 's|/|_|g')"
+
+          git remote add "$REMOTE_NAME" "https://github.com/$REPO.git" || true
+          git fetch "$REMOTE_NAME" "$BRANCH"
+
+          echo "Merging $REMOTE_NAME/$BRANCH (auto-resolve theirs)..."
+          git merge -X theirs --no-edit "$REMOTE_NAME/$BRANCH" || true
+
+          git add -A
+          echo "Changes from $REMOTE_NAME/$BRANCH:"
+          git log HEAD~1..HEAD --stat || true
+
+          done
+          fi    
+      
+      
       # Build all variants in a single Gradle invocation so tasks share the
       # configuration phase, classpath resolution and incremental build cache.
       # --parallel  — lets Gradle run independent subproject tasks concurrently.
       # --build-cache — reuses outputs from previous runs stored above.
       # --no-daemon  — avoids daemon startup overhead inside the ephemeral runner.
       - name: Build all APKs
-        run: >
-          ./gradlew assembleGithubNightly
-          --parallel --build-cache --no-daemon -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
+        run: |
+           sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*true/isMinifyEnabled = false/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*true/isShrinkResources = false/g' app/build.gradle.kts
+           ./gradlew assembleGithubRelease --no-daemon --parallel --build-cache --configuration-cache -Dorg.gradle.configureondemand=true -Pkotlin.incremental=true -Pkotlin.incremental.useClasspathSnapshot=true -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ')
 
-    
-        
-      - name: Upload Nightly APK
-        uses: actions/upload-artifact@v4
+          
+      - name: Publish release
+        uses: softprops/action-gh-release@v3
         with:
-          name: flow-nightly-apk
-          path: app/build/outputs/apk/github/nightly/app-github-nightly.apk
-          retention-days: 1
-
+          tag_name: flow
+          name: flow
+          prerelease: false
+          draft: false
+          files: "**/*.apk"
+    
+     
