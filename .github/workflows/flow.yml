@@ -45,7 +45,7 @@ jobs:
            ~/.gradle/notifications
            ~/.gradle/configuration-cache
            **/.gradle/configuration-cache
-         key: ${{ runner.os }}-gradleflow-${{ hashFiles('**/.gradle/configuration-cache') }}
+         key: ${{ runner.os }}-gradleflow-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle.properties', '**/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
          restore-keys: |
             ${{ runner.os }}-gradleflow-
 
