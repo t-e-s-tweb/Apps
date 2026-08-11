@@ -127,18 +127,15 @@ jobs:
       uses: gradle/actions/setup-gradle@v6
       with:
         cache-overwrite-existing: true
-        cache-disabled: true
+        cache-disabled: false 
     - name: cache
       uses: actions/cache@v6
       with:
          path: |
-           ~/.gradle/caches
-           ~/.gradle/wrapper
            ~/.gradle/notifications
            ~/.gradle/configuration-cache
            **/.gradle/configuration-cache
-           **/.gradle/caches
-         key: ${{ runner.os }}-gradlev2-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/.gradle/configuration-cache') }}
+         key: ${{ runner.os }}-gradleflow-${{ hashFiles('**/*.gradle', '**/*.gradle.kts', '**/gradle.properties', '**/libs.versions.toml', 'gradle/wrapper/gradle-wrapper.properties') }}
          restore-keys: |
             ${{ runner.os }}-gradlev2-
       
