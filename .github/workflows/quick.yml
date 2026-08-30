@@ -1,0 +1,118 @@
+name: quicksearch
+
+permissions:
+  contents: write
+  
+on:
+  workflow_dispatch:
+    inputs:
+      merge_prs_heli:
+        description: 'Comma-separated PR numbers to merge into heli app (0 = none)'
+        required: false
+        default: '0'
+
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ABI_FILTERS: arm64-v8a
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          repository: teja2495/quick-search
+          # Checkout the branch being built, not always main
+          ref: main
+          submodules: 'recursive'
+          fetch-depth: '0'
+      - name: Enable Gradle caching
+        run: |
+          echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
+          #echo "android.enableLintVital=false" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.unsafe.configuration-cache-problems=warn" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.daemon=true" >> ${{ github.workspace }}/gradle.properties
+          echo "org.gradle.parallel=true" >> ${{ github.workspace }}/gradle.properties
+      - name: Set Swap Space
+        uses: pierotofy/set-swap-space@master
+        with:
+          swap-size-gb: 10
+      - name: Boostrap Gradle Memory
+        shell: bash
+        run: |
+         wget https://raw.githubusercontent.com/PaulWoitaschek/Voice/refs/heads/main/scripts/gradle_bootstrap.sh
+         chmod +x gradle_bootstrap.sh
+         bash gradle_bootstrap.sh
+     # - name: Disable abortOnError in lint
+    #    run: sed -i 's/abortOnError = true/abortOnError = false/' "${{ github.workspace }}/app/build.gradle.kts"
+        
+      - name: Copy only changed files from selected PRs into Heli
+        if: ${{ github.event.inputs.merge_prs_heli != '0' }}
+        run: |
+         cd ${{ github.workspace }}/
+         git config user.name "github-actions[bot]"
+         git config user.email "github-actions[bot]@users.noreply.github.com"
+
+         IFS=',' read -ra PR_LIST <<< "${{ github.event.inputs.merge_prs_heli }}"
+         for PR_NUM in "${PR_LIST[@]}"; do
+          echo "Fetching PR #$PR_NUM from 2dust/v2rayNG..."
+          git fetch origin pull/$PR_NUM/head:pr-$PR_NUM
+          echo "Merging PR #$PR_NUM with auto-resolve (theirs)..."
+          git merge -X theirs --no-edit pr-$PR_NUM || true
+          echo "Changes from PR #$PR_NUM:"
+          git log HEAD~1..HEAD --stat || true
+         done      
+            
+  
+           
+          
+        
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          
+          
+      
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+         cache-disabled: true
+      - name: cache
+        uses: actions/cache@v6
+        with:
+         path: |
+           ~/.gradle/caches
+           ~/.gradle/wrapper
+           ~/.gradle/notifications
+           ~/.gradle/configuration-cache
+           **/.gradle/configuration-cache
+           **/.gradle/caches
+         key: ${{ runner.os }}-gradlequick-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties', '**/.gradle/configuration-cache') }}
+         restore-keys: |
+            ${{ runner.os }}-gradlequick-
+    
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        
+    #  - name: Filter
+    #    run: sed -i "s/abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'/abiFilters 'arm64-v8a'/" app/build.gradle
+        
+      - name: Build with Gradle
+        run: |
+         #sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*true/isMinifyEnabled = false/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*true/isShrinkResources = false/g' app/build.gradle.kts
+         sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*false/isMinifyEnabled = true/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*false/isShrinkResources = true/g' app/build.gradle.kts
+         ./gradlew assembleRelease --no-daemon --parallel --build-cache --configuration-cache -Dorg.gradle.configureondemand=true -Pkotlin.incremental=true -Pkotlin.incremental.useClasspathSnapshot=true -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
+
+      
+      - name: Publish release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: quick
+          name: quick
+          prerelease: false
+          draft: false
+          files: "**/*.apk"
