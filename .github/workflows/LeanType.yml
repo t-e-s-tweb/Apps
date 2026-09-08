@@ -25,16 +25,6 @@ jobs:
           ref: main
           submodules: 'recursive'
           fetch-depth: '0'
-      - name: Enable Gradle caching
-        run: |
-          echo "org.gradle.caching=true" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.configuration-cache=true" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.configureondemand=true" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.configuration-cache.encryption=false" >> ${{ github.workspace }}/gradle.properties
-          #echo "android.enableLintVital=false" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.unsafe.configuration-cache-problems=warn" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.daemon=true" >> ${{ github.workspace }}/gradle.properties
-          echo "org.gradle.parallel=true" >> ${{ github.workspace }}/gradle.properties
       - name: Set Swap Space
         uses: pierotofy/set-swap-space@master
         with:
@@ -105,7 +95,7 @@ jobs:
         run: |
          #sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*true/isMinifyEnabled = false/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*true/isShrinkResources = false/g' app/build.gradle.kts
          sed -i -e 's/isMinifyEnabled[[:space:]]*=[[:space:]]*false/isMinifyEnabled = true/g' -e 's/isShrinkResources[[:space:]]*=[[:space:]]*false/isShrinkResources = true/g' app/build.gradle.kts
-         ./gradlew assembleofflineliteRelease --no-daemon --parallel --build-cache --configuration-cache -Dorg.gradle.configureondemand=true -Pkotlin.incremental=true -Pkotlin.incremental.useClasspathSnapshot=true -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
+         ./gradlew assembleofflineRelease --no-daemon --parallel --no-build-cache --configuration-cache -Dorg.gradle.configureondemand=true -Pkotlin.incremental=true -Pkotlin.incremental.useClasspathSnapshot=true -Pandroid.enableR8.fullMode=false -Dorg.gradle.workers.max=8 -Dorg.gradle.jvmargs="-Xmx4g -XX:+UseG1GC -XX:MaxMetaspaceSize=1024m -XX:ReservedCodeCacheSize=256m" -Pandroid.injected.build.abi=arm64-v8a -PtargetAbi=arm64-v8a -PABI_FILTERS=arm64-v8a -Pandroid.injected.testOnly=false -Pandroid.injected.resConfigs=en,en_PK,en-pk -x check $(./gradlew tasks --all --quiet 2>/dev/null | awk '/lint|analyze|test|Test/{gsub(/.*:/,""); print "-x " $1}' | tr '\n' ' ') 
 
       
       - name: Publish release
