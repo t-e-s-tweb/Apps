@@ -119,4 +119,7 @@ jobs:
           name: widgets
           prerelease: false
           draft: false
+          fail_on_unmatched_files: false
           files: "**/*.apk"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
