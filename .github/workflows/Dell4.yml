@@ -110,7 +110,7 @@ jobs:
       uses: robinraju/release-downloader@v1.13
       with:
         repository: 't-e-s-tweb/AndroidLibXLite'
-        tag: v26.9.9
+        tag: v26.9.30
         fileName: 'libv2ray.aar'
         out-file-path: V2rayNG/app/libs/
 
