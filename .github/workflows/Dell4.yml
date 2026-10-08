@@ -227,9 +227,11 @@ jobs:
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified1.py
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified2.py
         wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified.py
+        wget https://raw.githubusercontent.com/t-e-s-tweb/v-rules/refs/heads/main/vpatches/unified4.py
         python3 unified.py ${{ github.workspace }}/
         python3 unified1.py ${{ github.workspace }}/
         python3 unified2.py ${{ github.workspace }}/
+        python3 unified4.py ${{ github.workspace }}/
     - name: Build APK
       run: |
         cd ${{ github.workspace }}/V2rayNG
